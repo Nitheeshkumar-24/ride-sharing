@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ride History - ShareNGo</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        h2 {
+            margin: 0 0 1rem;
+            color: #333;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.8rem 1.5rem;
+            margin: 0.5rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            text-decoration: none;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .ride-box {
+            background: #f9f9f9;
+            padding: 1.5rem;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            text-align: left;
+            transition: all 0.3s ease;
+        }
+
+        .ride-box:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .ride-box p {
+            margin: 0.5rem 0;
+            color: #444;
+        }
+
+        .clear-btn {
+            width: 100%;
+            margin-top: 1rem;
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.8rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .clear-btn:hover {
+            background: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Ride History</h2>
+        <p>View all your previous ride bookings.</p>
+
+        <!-- Navigation Buttons -->
+        <div>
+            <a href="index.html" class="btn">Home</a>
+            <a href="ride_creation.html" class="btn">Create a Ride</a>
+            <a href="filter.html" class="btn">Filter</a>
+            <a href="my_rides.html" class="btn">My Rides</a>
+        </div>
+
+        <!-- Ride History Section -->
+        <div id="rideHistory"></div>
+
+        <!-- Back Button -->
+        <button class="btn" onclick="goBack()">Back</button>
+
+        <!-- Clear History Button -->
+        <button class="clear-btn" onclick="clearHistory()">Clear Ride History</button>
+    </div>
+
+    <script>
+        function loadRideHistory() {
+            let rideHistory = JSON.parse(localStorage.getItem("selectedRides"));
+
+            if (!rideHistory || rideHistory.length === 0) {
+                rideHistory = [
+                    { date: "2025-02-10", from: "New York", to: "Boston", seats: 2, vehicle: "Car", price: 50, owner: "John Doe" },
+                    { date: "2025-02-08", from: "Los Angeles", to: "San Francisco", seats: 1, vehicle: "Auto", price: 30, owner: "Emily Smith" },
+                    { date: "2025-02-05", from: "Houston", to: "Austin", seats: 3, vehicle: "Car", price: 40, owner: "Michael Brown" }
+                ];
+                localStorage.setItem("selectedRides", JSON.stringify(rideHistory));
+            }
+
+            let rideHistoryDiv = document.getElementById("rideHistory");
+            rideHistoryDiv.innerHTML = "";
+
+            rideHistory.forEach((ride) => {
+                let rideBox = document.createElement("div");
+                rideBox.className = "ride-box";
+
+                rideBox.innerHTML = `
+                    <p><strong>Date:</strong> ${ride.date}</p>
+                    <p><strong>From:</strong> ${ride.from}</p>
+                    <p><strong>To:</strong> ${ride.to}</p>
+                    <p><strong>Seats:</strong> ${ride.seats}</p>
+                    <p><strong>Vehicle:</strong> ${ride.vehicle}</p>
+                    <p><strong>Price:</strong> ₹${ride.price}</p>
+                    <p><strong>Owner:</strong> ${ride.owner}</p>
+                `;
+
+                rideHistoryDiv.appendChild(rideBox);
+            });
+        }
+
+        function clearHistory() {
+            localStorage.removeItem("selectedRides");
+            alert("Ride history cleared!");
+            loadRideHistory();
+        }
+
+        function goBack() {
+            window.location.href = "index.html";
+        }
+
+        window.onload = loadRideHistory;
+    </script>
+</body>
+</html>

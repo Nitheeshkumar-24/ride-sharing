@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShareNGo - Filter Rides</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        h2 {
+            margin: 0 0 1rem;
+            color: #333;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .filter-group {
+            text-align: left;
+            margin-bottom: 1rem;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 0.3rem;
+            color: #555;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.8rem 1.5rem;
+            margin: 0.5rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .available-rides {
+            margin-top: 2rem;
+            text-align: left;
+        }
+
+        .ride-box {
+            background: #f9f9f9;
+            padding: 1.5rem;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .ride-box:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .ride-box p {
+            margin: 0.5rem 0;
+            color: #444;
+        }
+
+        .ride-box .select-btn {
+            width: 100%;
+            margin-top: 1rem;
+            background: #28a745;
+        }
+
+        .ride-box .select-btn:hover {
+            background: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Filter Rides</h2>
+
+        <!-- Filter Form -->
+        <div class="filter-group">
+            <label for="from">From</label>
+            <input type="text" id="from" placeholder="Enter starting location">
+        </div>
+
+        <div class="filter-group">
+            <label for="to">To</label>
+            <input type="text" id="to" placeholder="Enter destination">
+        </div>
+
+        <div class="filter-group">
+            <label for="vehicle">Vehicle Type</label>
+            <select id="vehicle">
+                <option value="">Any</option>
+                <option value="Car">Car</option>
+                <option value="Auto">Auto</option>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label for="price">Max Price (₹)</label>
+            <input type="number" id="price" min="0" placeholder="Enter max price">
+        </div>
+
+        <div class="filter-group">
+            <label for="date">Date</label>
+            <input type="date" id="date">
+        </div>
+
+        <div class="filter-group">
+            <label for="time">Time</label>
+            <input type="time" id="time">
+        </div>
+
+        <button class="btn" onclick="filterRides()">Search</button>
+        <button class="btn" onclick="resetFilters()">Reset</button>
+        <button class="btn" onclick="goBack()">Back</button>
+
+        <!-- Filtered Rides Section -->
+        <div class="available-rides" id="rides-container">
+            <h3>Available Rides</h3>
+        </div>
+    </div>
+
+    <script>
+        const ridesData = [
+            { from: "Downtown", to: "Airport", vehicle: "Car", price: 150, date: "2025-02-20", time: "10:00" },
+            { from: "Station", to: "City Center", vehicle: "Auto", price: 50, date: "2025-02-21", time: "09:30" },
+            { from: "Mall", to: "University", vehicle: "Car", price: 200, date: "2025-02-22", time: "14:00" }
+        ];
+
+        function loadRides() {
+            let ridesContainer = document.getElementById("rides-container");
+            ridesContainer.innerHTML = "<h3>Available Rides</h3>";
+
+            ridesData.forEach((ride, index) => {
+                let rideElement = `
+                    <div class="ride-box" data-index="${index}">
+                        <p><strong>From:</strong> ${ride.from}</p>
+                        <p><strong>To:</strong> ${ride.to}</p>
+                        <p><strong>Vehicle:</strong> ${ride.vehicle}</p>
+                        <p><strong>Price:</strong> ₹${ride.price}</p>
+                        <p><strong>Date:</strong> ${ride.date}</p>
+                        <p><strong>Time:</strong> ${ride.time}</p>
+                        <button class="btn select-btn" onclick="selectRide(${index})">Select Ride</button>
+                    </div>
+                `;
+                ridesContainer.innerHTML += rideElement;
+            });
+        }
+
+        function filterRides() {
+            let from = document.getElementById("from").value.toLowerCase();
+            let to = document.getElementById("to").value.toLowerCase();
+            let vehicle = document.getElementById("vehicle").value;
+            let maxPrice = document.getElementById("price").value;
+            let date = document.getElementById("date").value;
+            let time = document.getElementById("time").value;
+
+            document.querySelectorAll(".ride-box").forEach(ride => {
+                let index = ride.getAttribute("data-index");
+                let rideData = ridesData[index];
+
+                if ((from && !rideData.from.toLowerCase().includes(from)) ||
+                    (to && !rideData.to.toLowerCase().includes(to)) ||
+                    (vehicle && rideData.vehicle !== vehicle) ||
+                    (maxPrice && rideData.price > maxPrice) ||
+                    (date && rideData.date !== date) ||
+                    (time && rideData.time !== time)) {
+                    ride.style.display = "none";
+                } else {
+                    ride.style.display = "block";
+                }
+            });
+        }
+
+        function resetFilters() {
+            document.querySelectorAll(".filter-group input, .filter-group select").forEach(input => input.value = "");
+            document.querySelectorAll(".ride-box").forEach(ride => ride.style.display = "block");
+        }
+
+        function selectRide(index) {
+            let ride = ridesData[index];
+            let selectedRides = JSON.parse(localStorage.getItem("myRides")) || [];
+            selectedRides.push(ride);
+            localStorage.setItem("myRides", JSON.stringify(selectedRides));
+            alert("Ride selected successfully!");
+            window.location.href = "my_rides.html";
+        }
+
+        function goBack() {
+            window.location.href = "index.html";
+        }
+
+        window.onload = loadRides;
+    </script>
+</body>
+</html>

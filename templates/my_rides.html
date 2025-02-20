@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Rides - ShareNGo</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+        .ride-box {
+            background: #f9f9f9;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+        .btn {
+            width: 100%;
+            padding: 0.8rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 0.5rem;
+        }
+        .cancel-btn {
+            background: #dc3545;
+            color: white;
+        }
+        .cancel-btn:hover {
+            background: #c82333;
+        }
+        .chat-btn {
+            background: #007bff;
+            color: white;
+        }
+        .chat-btn:hover {
+            background: #0056b3;
+        }
+        .back-btn {
+            background: #28a745;
+            color: white;
+            margin-top: 1rem;
+        }
+        .back-btn:hover {
+            background: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>My Rides</h2>
+        <div id="myRidesList">
+            <p>No rides found!</p>
+        </div>
+        <button class="btn back-btn" onclick="goBack()">Back</button>
+    </div>
+
+    <script>
+        function loadMyRides() {
+            const myRidesContainer = document.getElementById("myRidesList");
+            myRidesContainer.innerHTML = ""; 
+            const rides = JSON.parse(localStorage.getItem("myRides")) || [];
+
+            if (rides.length === 0) {
+                myRidesContainer.innerHTML = "<p>No rides found!</p>";
+                return;
+            }
+
+            rides.forEach((ride, index) => {
+                const rideBox = document.createElement("div");
+                rideBox.classList.add("ride-box");
+                rideBox.innerHTML = `
+                    <p><strong>From:</strong> ${ride.from}</p>
+                    <p><strong>To:</strong> ${ride.to}</p>
+                    <p><strong>Date:</strong> ${ride.date}</p>
+                    <p><strong>Vehicle:</strong> ${ride.vehicle}</p>
+                    <p><strong>Price:</strong> ₹${ride.price}</p>
+                    <button class="btn cancel-btn" onclick="cancelRide(${index})">Cancel Ride</button>
+                    <button class="btn chat-btn" onclick="chatWithDriver(${index})">Chat</button>
+                `;
+                myRidesContainer.appendChild(rideBox);
+            });
+        }
+
+        function cancelRide(index) {
+            let confirmCancel = confirm("Are you sure you want to cancel this ride?");
+            if (confirmCancel) {
+                let rides = JSON.parse(localStorage.getItem("myRides")) || [];
+                rides.splice(index, 1);
+                localStorage.setItem("myRides", JSON.stringify(rides));
+                loadMyRides();
+                alert("Ride Cancelled Successfully!");
+            }
+        }
+
+        function chatWithDriver(index) {
+            alert("Redirecting to chat with driver for ride #" + (index + 1));
+            window.location.href = "chat.html";  // Replace with actual chat page
+        }
+
+        function goBack() {
+            window.location.href = "index.html";
+        }
+
+        window.onload = loadMyRides;
+    </script>
+</body>
+</html>

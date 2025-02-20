@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat - ShareNGo</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+        h2 {
+            margin-bottom: 1rem;
+        }
+        .chat-box {
+            background: #f9f9f9;
+            height: 300px;
+            overflow-y: auto;
+            border-radius: 10px;
+            padding: 1rem;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        .message {
+            padding: 0.6rem;
+            border-radius: 10px;
+            margin: 0.5rem 0;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        .user-message {
+            background: #667eea;
+            color: white;
+            align-self: flex-end;
+            text-align: right;
+        }
+        .driver-message {
+            background: #e2e2e2;
+            align-self: flex-start;
+        }
+        .input-container {
+            display: flex;
+            margin-top: 1rem;
+        }
+        input {
+            flex: 1;
+            padding: 0.8rem;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            outline: none;
+        }
+        .send-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 0.8rem;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 0.5rem;
+        }
+        .send-btn:hover {
+            background: #0056b3;
+        }
+        .back-btn {
+            background: #28a745;
+            color: white;
+            padding: 0.8rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 1rem;
+        }
+        .back-btn:hover {
+            background: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Chat with Ride Owner</h2>
+        <div class="chat-box" id="chatBox"></div>
+        
+        <div class="input-container">
+            <input type="text" id="messageInput" placeholder="Type your message...">
+            <button class="send-btn" onclick="sendMessage()">Send</button>
+        </div>
+
+        <button class="back-btn" onclick="goBack()">Back</button>
+    </div>
+
+    <script>
+        function loadChatHistory() {
+            let chatBox = document.getElementById("chatBox");
+            chatBox.innerHTML = "";
+            let chatHistory = JSON.parse(localStorage.getItem("chatHistory")) || [];
+
+            chatHistory.forEach(chat => {
+                let messageDiv = document.createElement("div");
+                messageDiv.classList.add("message");
+                if (chat.sender === "user") {
+                    messageDiv.classList.add("user-message");
+                    messageDiv.innerHTML = `<strong>You:</strong> ${chat.message}`;
+                } else {
+                    messageDiv.classList.add("driver-message");
+                    messageDiv.innerHTML = `<strong>Driver:</strong> ${chat.message}`;
+                }
+                chatBox.appendChild(messageDiv);
+            });
+
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function sendMessage() {
+            let input = document.getElementById("messageInput");
+            let message = input.value.trim();
+            if (message === "") return;
+
+            let chatHistory = JSON.parse(localStorage.getItem("chatHistory")) || [];
+            chatHistory.push({ sender: "user", message });
+            localStorage.setItem("chatHistory", JSON.stringify(chatHistory));
+
+            input.value = "";
+            loadChatHistory();
+
+            // Simulate a driver response
+            setTimeout(() => {
+                chatHistory.push({ sender: "driver", message: "Got it! See you soon." });
+                localStorage.setItem("chatHistory", JSON.stringify(chatHistory));
+                loadChatHistory();
+            }, 1000);
+        }
+
+        function goBack() {
+            window.location.href = "my_rides.html";
+        }
+
+        window.onload = loadChatHistory;
+    </script>
+</body>
+</html>

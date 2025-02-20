@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShareNGo - Home</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        h2 {
+            margin: 0 0 1rem;
+            color: #333;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.8rem 1.5rem;
+            margin: 0.5rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            text-decoration: none;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .ride-box {
+            background: #f9f9f9;
+            padding: 1.5rem;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            text-align: left;
+            transition: all 0.3s ease;
+        }
+
+        .ride-box:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .ride-box p {
+            margin: 0.5rem 0;
+            color: #444;
+        }
+
+        .ride-box .select-btn {
+            width: 100%;
+            margin-top: 1rem;
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 0.8rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .ride-box .select-btn:hover {
+            background: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Welcome to ShareNGo</h2>
+        <p>Book a ride or create a new one with ease.</p>
+
+        <!-- Navigation Buttons -->
+        <div>
+            <a href="ride_creation.html" class="btn">Create a Ride</a>
+            <a href="filter.html" class="btn">Filter</a>
+            <a href="ride_history.html" class="btn">Ride History</a>
+            <a href="my_rides.html" class="btn">My Rides</a>
+        </div>
+
+        <!-- Available Rides Section -->
+        <div class="available-rides">
+            <h3>Available Rides</h3>
+
+            <!-- Ride 1 -->
+            <div class="ride-box">
+                <p><strong>Date:</strong> 2025-02-20</p>
+                <p><strong>Time:</strong> 10:30 AM</p>
+                <p><strong>From:</strong> Downtown</p>
+                <p><strong>To:</strong> Airport</p>
+                <p><strong>Vehicle:</strong> Car</p>
+                <p><strong>Price:</strong> ₹1200</p>
+                <button class="select-btn" onclick="selectRide('2025-02-20', '10:30 AM', 'Downtown', 'Airport', 'Car', '1200')">Select Ride</button>
+            </div>
+
+            <!-- Ride 2 -->
+            <div class="ride-box">
+                <p><strong>Date:</strong> 2025-02-21</p>
+                <p><strong>Time:</strong> 2:00 PM</p>
+                <p><strong>From:</strong> City Center</p>
+                <p><strong>To:</strong> University</p>
+                <p><strong>Vehicle:</strong> Auto</p>
+                <p><strong>Price:</strong> ₹300</p>
+                <button class="select-btn" onclick="selectRide('2025-02-21', '2:00 PM', 'City Center', 'University', 'Auto', '300')">Select Ride</button>
+            </div>
+
+            <!-- Ride 3 -->
+            <div class="ride-box">
+                <p><strong>Date:</strong> 2025-02-22</p>
+                <p><strong>Time:</strong> 6:45 PM</p>
+                <p><strong>From:</strong> Train Station</p>
+                <p><strong>To:</strong> Mall</p>
+                <p><strong>Vehicle:</strong> Car</p>
+                <p><strong>Price:</strong> ₹500</p>
+                <button class="select-btn" onclick="selectRide('2025-02-22', '6:45 PM', 'Train Station', 'Mall', 'Car', '500')">Select Ride</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function selectRide(date, time, from, to, vehicle, price) {
+            let selectedRides = JSON.parse(localStorage.getItem("myRides")) || [];
+
+            let ride = { date, time, from, to, vehicle, price, owner: "Ride Owner" };
+
+            selectedRides.push(ride);
+
+            localStorage.setItem("myRides", JSON.stringify(selectedRides));
+
+            alert("Ride selected successfully!");
+
+            // Redirect to "My Rides"
+            window.location.href = "my_rides.html";
+        }
+    </script>
+</body>
+</html>

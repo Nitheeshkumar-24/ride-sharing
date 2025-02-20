@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create a Ride - ShareNGo</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        h2 {
+            margin: 0 0 1.5rem;
+            color: #333;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .input-group {
+            margin-bottom: 1rem;
+            text-align: left;
+        }
+
+        label {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #444;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            font-size: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 0.8rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn.back-btn {
+            background: #6c757d;
+            margin-top: 0.5rem;
+        }
+
+        .btn.back-btn:hover {
+            background: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Create a Ride</h2>
+        <form id="rideForm">
+            <div class="input-group">
+                <label for="from">From Location</label>
+                <input type="text" id="from" placeholder="Enter starting point" required>
+            </div>
+
+            <div class="input-group">
+                <label for="to">To Location</label>
+                <input type="text" id="to" placeholder="Enter destination" required>
+            </div>
+
+            <div class="input-group">
+                <label for="date">Select Date</label>
+                <input type="date" id="date" required>
+            </div>
+
+            <div class="input-group">
+                <label for="time">Select Time</label>
+                <input type="time" id="time" required>
+            </div>
+
+            <div class="input-group">
+                <label for="vehicle">Select Vehicle Type</label>
+                <select id="vehicle" required>
+                    <option value="Car">Car</option>
+                    <option value="Auto">Auto</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label for="passengers">Total Passengers</label>
+                <input type="number" id="passengers" min="1" max="10" required>
+            </div>
+
+            <div class="input-group">
+                <label for="price">Total Price (₹)</label>
+                <input type="number" id="price" min="1" required>
+            </div>
+
+            <button type="submit" class="btn">Create Ride</button>
+            <button type="button" class="btn back-btn" onclick="goBack()">Back</button>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById("rideForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+
+            let from = document.getElementById("from").value;
+            let to = document.getElementById("to").value;
+            let date = document.getElementById("date").value;
+            let time = document.getElementById("time").value;
+            let vehicle = document.getElementById("vehicle").value;
+            let passengers = document.getElementById("passengers").value;
+            let price = document.getElementById("price").value;
+
+            let ride = { from, to, date, time, vehicle, passengers, price };
+
+            let myRides = JSON.parse(localStorage.getItem("myRides")) || [];
+            myRides.push(ride);
+            localStorage.setItem("myRides", JSON.stringify(myRides));
+
+            alert("Ride Created Successfully!");
+
+            // Redirect to My Rides page
+            window.location.href = "my_rides.html";
+        });
+
+        function goBack() {
+            window.location.href = "index.html";
+        }
+    </script>
+</body>
+</html>

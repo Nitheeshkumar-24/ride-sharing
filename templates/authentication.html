@@ -104,17 +104,17 @@
                 <input name="full-name" type="text" id="fullName" placeholder="Full name" required>
             </div>
             <div class="input-group">
-                <input type="text" id="universityID" placeholder="University ID" required>
+                <input name="university-id" type="text" id="universityID" placeholder="University ID" required>
             </div>
             <div class="input-group">
-                <select id="gender" required>
+                <select name="gender" id="gender" required>
                     <option value="" disabled selected>Select gender</option>
                     <option value="male">Male</option>
                     <option value="female">Female</option>
                 </select>
             </div>
             <div class="input-group">
-                <input type="password" id="signUpPassword" placeholder="Password" required>
+                <input name="password" type="password" id="signUpPassword" placeholder="Password" required>
             </div>
             <button type="submit" class="submit-btn" id="createaccount">Create Account</button>
         </form>
@@ -148,7 +148,7 @@
             if (user) {
                 alert('Login successful!');
                 localStorage.setItem('loggedInUser', JSON.stringify(user));
-                window.location.href = 'index.html';
+                window.location.href = '/index';
             } else {
                 alert('Invalid email or password!');
             }

@@ -6,11 +6,10 @@ app = Flask(__name__)
 def authentication():
     return render_template('authentication.html')
 
-@app.route('/register', method=['POST'])
-def register():
-    if request.method == 'POST':
-        email = request.form['email']
-        full_name = request.form['full-name']
+@app.route('/index')
+def index():
+    return render_template('index.html')
+        
 
 if __name__ == '__main__':
     app.run(debug=True)

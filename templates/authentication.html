@@ -77,7 +77,7 @@
 </head>
 <body>
     <div class="container">
-        <img src="1000153140-removebg.png" alt="ShareNGo Logo" class="logo">
+        <img src="" alt="ShareNGo Logo" class="logo">
         <h1>ShareNGo</h1>
         <p class="subtitle">University Ride Sharing Made Easy</p>
         
@@ -96,12 +96,12 @@
             <button type="submit" class="submit-btn">Login</button>
         </form>
 
-        <form id="signUpForm" class="hidden">
+        <form id="signUpForm" class="hidden" action="/register" method="POST">
             <div class="input-group">
-                <input type="email" id="signUpEmail" placeholder="Email address" required>
+                <input name="email" type="email" id="signUpEmail" placeholder="Email address" required>
             </div>
             <div class="input-group">
-                <input type="text" id="fullName" placeholder="Full name" required>
+                <input name="full-name" type="text" id="fullName" placeholder="Full name" required>
             </div>
             <div class="input-group">
                 <input type="text" id="universityID" placeholder="University ID" required>
@@ -116,7 +116,7 @@
             <div class="input-group">
                 <input type="password" id="signUpPassword" placeholder="Password" required>
             </div>
-            <button type="submit" class="submit-btn">Create Account</button>
+            <button type="submit" class="submit-btn" id="createaccount">Create Account</button>
         </form>
     </div>
 

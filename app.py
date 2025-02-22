@@ -7,7 +7,7 @@ import re
 app = Flask(__name__)
 
 # Initialize Firebase
-cred = credentials.Certificate(r"e:\git files\ride-sharing-b7053-firebase-adminsdk-fbsvc-45494f1901.json")
+cred = credentials.Certificate(r"C:\git files\ride-sharing-b7053-firebase-adminsdk-fbsvc-45494f1901.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
@@ -19,9 +19,12 @@ def is_valid_vit_email(email):
 # Function to get next ride_id
 def get_next_ride_id():
     rides_ref = db.collection('rides').order_by('ride_id', direction=firestore.Query.DESCENDING).limit(1)
-    last_ride = rides_ref.stream()
-    for ride in last_ride:
-        return ride.to_dict
+    last_ride = list(rides_ref.stream())  # Convert to list
+
+    if last_ride:  # Check if there are any rides
+        return last_ride[0].to_dict().get('ride_id', 0) + 1
+    else:
+        return 1  # Start from 1 if no rides exist
 
 # Flask Routes
 @app.route('/')
@@ -34,53 +37,9 @@ def index():
 
 
 
-@app.route('/ride_creation_page', methods=['GET', 'POST'])
+@app.route('/ride_creation_page')
 def ride_creation_page():
-    if request.method == 'GET':
-        return render_template('ride_creation.html')
-
-    try:
-        data = request.get_json()
-        ride_id = get_next_ride_id()
-        from_location = data.get('from_location')
-        to_location = data.get('to_location')
-        ride_date_and_time = datetime.datetime.strptime(data.get('ride_date_and_time'), '%Y-%m-%dT%H:%M')
-        total_seats = int(data.get('total_seats'))
-        available_seats = total_seats
-        total_price = float(data.get('total_price'))
-        per_person_cost = total_price / total_seats
-        vehicle_id = int(data.get('vehicle_id'))
-        passenger_emails = data.get('passenger_emails', [])
-
-        # Store data in rides collection
-        ride_data = {
-            'ride_id': ride_id,
-            'from_location': from_location,
-            'to_location': to_location,
-            'ride_date_and_time': ride_date_and_time,
-            'total_seats': total_seats,
-            'available_seats': available_seats,
-            'total_price': total_price,
-            'per_person_cost': per_person_cost,
-            'vehicle_id': vehicle_id
-        }
-        db.collection('rides').document(str(ride_id)).set(ride_data)
-
-        # Store data in passenger_booking collection
-        for email in passenger_emails:
-            booking_data = {
-                'ride_id': ride_id,
-                'passenger_email': email,
-                'seat_count': len(passenger_emails),
-                'total_amount': total_price
-            }
-            db.collection('passenger_booking').add(booking_data)
-
-        return render_template('ride_creation.html')
-
-    except Exception as e:
-        print('Error:', str(e))
-        return jsonify({'error': 'Failed to create ride and store bookings'}), 500
+    return render_template('ride_creation.html')
 
 
 @app.route('/filter_page')
@@ -180,6 +139,45 @@ def signin():
     except Exception as e:
         print("Error:", str(e))
         return jsonify({'error': 'Something went wrong!'}), 500
+    
+@app.route('/create_ride', methods=['POST'])
+def create_ride():
+    try:
+        data = request.get_json()
+        ride_id = get_next_ride_id()
+        
+        from_location = data.get('from')
+        to_location = data.get('to')
+        ride_date = data.get('date')
+        ride_time = data.get('time')
+        vehicle_type = data.get('vehicle')
+        total_seats = int(data.get('passengers'))
+        total_price = float(data.get('price'))
+        per_person_cost = total_price / total_seats
+
+        # Convert to datetime
+        ride_date_and_time = datetime.datetime.strptime(f"{ride_date} {ride_time}", "%Y-%m-%d %H:%M")
+
+        # Firestore document
+        ride_data = {
+            'ride_id': ride_id,
+            'from_location': from_location,
+            'to_location': to_location,
+            'ride_date_and_time': ride_date_and_time,
+            'total_seats': total_seats,
+            'available_seats': total_seats,
+            'total_price': total_price,
+            'per_person_cost': per_person_cost,
+            'vehicle_type': vehicle_type
+        }
+
+        db.collection('rides').document(str(ride_id)).set(ride_data)
+
+        return jsonify({'message': 'Ride created successfully!'}), 200
+
+    except Exception as e:
+        print('Error:', str(e))
+        return jsonify({'error': f'Failed to create ride: {str(e)}'}), 500
     
 
 if __name__ == '__main__':

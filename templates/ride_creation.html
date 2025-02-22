@@ -127,38 +127,50 @@
                 <input type="number" id="price" min="1" required>
             </div>
 
-            <button type="submit" class="btn">Create Ride</button>
+            <button type="submit" class="btn" id="create_ride_button">Create Ride</button>
             <button type="button" class="btn back-btn" onclick="goBack()">Back</button>
         </form>
     </div>
 
     <script>
-        document.getElementById("rideForm").addEventListener("submit", function(event) {
-            event.preventDefault();
+        document.getElementById("rideForm").addEventListener("submit", async function(event) {
+        event.preventDefault();
 
-            let from = document.getElementById("from").value;
-            let to = document.getElementById("to").value;
-            let date = document.getElementById("date").value;
-            let time = document.getElementById("time").value;
-            let vehicle = document.getElementById("vehicle").value;
-            let passengers = document.getElementById("passengers").value;
-            let price = document.getElementById("price").value;
+        let formData = {
+            from: document.getElementById("from").value,
+            to: document.getElementById("to").value,
+            date: document.getElementById("date").value,
+            time: document.getElementById("time").value,
+            vehicle: document.getElementById("vehicle").value,
+            passengers: document.getElementById("passengers").value,
+            price: document.getElementById("price").value
+        };
 
-            let ride = { from, to, date, time, vehicle, passengers, price };
+        try {
+            let response = await fetch("/create_ride", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(formData)
+            });
 
-            let myRides = JSON.parse(localStorage.getItem("myRides")) || [];
-            myRides.push(ride);
-            localStorage.setItem("myRides", JSON.stringify(myRides));
-
-            alert("Ride Created Successfully!");
-
-            // Redirect to My Rides page
-            window.location.href = "my_rides.html";
-        });
-
+            let result = await response.json();
+            if (response.ok) {
+                alert(result.message);
+                window.location.href = "/my_rides_page";
+            } else {
+                alert("Error: " + result.error);
+            }
+        } catch (error) {
+            alert("Failed to create ride. Please try again.");
+        }
+    });
+    
         function goBack() {
             window.location.href = "index.html";
         }
+
     </script>
 </body>
 </html>

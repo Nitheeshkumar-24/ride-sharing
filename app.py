@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 import firebase_admin
+import datetime
 from firebase_admin import credentials, firestore
 import re
 
@@ -15,6 +16,13 @@ def is_valid_vit_email(email):
     pattern = re.compile(r'^[a-zA-Z0-9._%+-]+@(vitstudent\.ac\.in|vit\.ac\.in)$')
     return pattern.match(email)
 
+# Function to get next ride_id
+def get_next_ride_id():
+    rides_ref = db.collection('rides').order_by('ride_id', direction=firestore.Query.DESCENDING).limit(1)
+    last_ride = rides_ref.stream()
+    for ride in last_ride:
+        return ride.to_dict
+
 # Flask Routes
 @app.route('/')
 def authentication():
@@ -24,7 +32,8 @@ def authentication():
 def index():
     return render_template('index.html')'''
 
-@app.route('/ride_creation_page')
+
+@app.route('/r')
 def ride_creation_page():
     return render_template('ride_creation.html')
 

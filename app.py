@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for
 import firebase_admin
 from firebase_admin import credentials, firestore
+import re
 
 app = Flask(__name__)
 
@@ -8,6 +9,11 @@ app = Flask(__name__)
 cred = credentials.Certificate(r"E:\git files\ride-sharing\ride-sharing-b7053-firebase-adminsdk-fbsvc-6b3474ac7d.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
+
+# Email validation for VIT domains
+def is_valid_vit_email(email):
+    pattern = re.compile(r'^[a-zA-Z0-9._%+-]+@(vitstudent\.ac\.in|vit\.ac\.in)$')
+    return pattern.match(email)
 
 # Flask Routes
 @app.route('/')
@@ -28,6 +34,9 @@ def register():
 
     if not (email and full_name and university_id and gender and password):
         return "All fields are required!", 400
+
+    if not is_valid_vit_email(email):
+        return "Invalid email domain. Please use your VIT email.", 400
 
     # Check if user already exists
     doc_ref = db.collection('users').document(email)
@@ -56,6 +65,9 @@ def signin():
     if not (email and password):
         return "Email and password are required!", 400
 
+    if not is_valid_vit_email(email):
+        return "Invalid email domain. Please use your VIT email.", 400
+
     # Check if user exists in Firebase Firestore
     doc_ref = db.collection('users').document(email)
     doc = doc_ref.get()
@@ -68,3 +80,4 @@ def signin():
 
 if __name__ == '__main__':
     app.run(debug=True)
+

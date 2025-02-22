@@ -86,15 +86,16 @@
             <button class="toggle-btn" id="signUpBtn">Sign Up</button>
         </div>
 
-        <form id="loginForm">
+        <form action="/signin" method="POST">
             <div class="input-group">
-                <input type="email" id="loginEmail" placeholder="Email address" required>
+                <input type="email" name="email" placeholder="Email address" required>
             </div>
             <div class="input-group">
-                <input type="password" id="loginPassword" placeholder="Password" required>
+                <input type="password" name="password" placeholder="Password" required>
             </div>
             <button type="submit" class="submit-btn">Login</button>
         </form>
+        
 
         <form id="signUpForm" class="hidden" action="/register" method="POST">
             <div class="input-group">

@@ -13,7 +13,7 @@ app = Flask(__name__)
 app.secret_key = provide_secret_key()
 
 # Initialize Firebase
-cred = credentials.Certificate(r"C:\git files\ride-sharing-b7053-firebase-adminsdk-fbsvc-45494f1901.json")
+cred = credentials.Certificate(r"e:\git files\ride-sharing-b7053-firebase-adminsdk-fbsvc-45494f1901.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
@@ -158,7 +158,7 @@ def create_ride():
         to_location = data.get('to')
         ride_date = data.get('date')
         ride_time = data.get('time')
-        vehicle_type = data.get('vehicle')
+        vehicle_id = data.get('vehicle')
         total_seats = int(data.get('passengers'))
         total_price = float(data.get('price'))
         current_member_count = 1
@@ -178,7 +178,7 @@ def create_ride():
             'available_seats': total_seats,
             'total_price': total_price,
             'per_person_cost': per_person_cost,
-            'vehicle_type': vehicle_type,
+            'vehicle_type': vehicle_id,
             'owner': user_email
         }
 

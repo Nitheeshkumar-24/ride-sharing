@@ -78,6 +78,8 @@ def signin():
     print(f"User {email} signed in successfully!")
     return redirect(url_for('index'))
 
+
+
 if __name__ == '__main__':
     app.run(debug=True)
 

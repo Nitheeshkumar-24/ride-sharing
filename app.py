@@ -6,7 +6,7 @@ import re
 app = Flask(__name__)
 
 # Initialize Firebase
-cred = credentials.Certificate(r"C:\git files\ride-sharing-b7053-firebase-adminsdk-fbsvc-45494f1901.json")
+cred = credentials.Certificate(r"e:\git files\ride-sharing-b7053-firebase-adminsdk-fbsvc-45494f1901.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
@@ -19,10 +19,10 @@ def is_valid_vit_email(email):
 @app.route('/')
 def authentication():
     return render_template('authentication.html')
-
+'''
 @app.route('/index')
 def index():
-    return render_template('index.html')
+    return render_template('index.html')'''
 
 @app.route('/ride_creation_page')
 def ride_creation_page():
@@ -42,6 +42,19 @@ def ride_history_page():
 @app.route('/my_rides_page')
 def my_rides_page():
     return render_template('my_rides.html')
+
+@app.route('/index')
+def index():
+    try:
+        # Get all ride documents from Firestore
+        rides_ref = db.collection('rides')
+        rides = [ride.to_dict() for ride in rides_ref.stream()]
+
+        return render_template('index.html', rides=rides)
+
+    except Exception as e:
+        print("Error:", str(e))
+        return "Failed to fetch rides", 500
 
 
 @app.route('/register', methods=['POST'])

@@ -6,7 +6,7 @@ import re
 app = Flask(__name__)
 
 # Initialize Firebase
-cred = credentials.Certificate(r"E:\git files\ride-sharing\ride-sharing-b7053-firebase-adminsdk-fbsvc-6b3474ac7d.json")
+cred = credentials.Certificate(r"ride-sharing\ride-sharing-b7053-firebase-adminsdk-fbsvc-6b93718f27.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 

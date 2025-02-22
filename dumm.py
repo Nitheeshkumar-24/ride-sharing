@@ -6,4 +6,4 @@ cred = credentials.Certificate(r"E:\git files\ride-sharing-b7053-firebase-admins
 app = firebase_admin.initialize_app(cred)
 db = firestore.client()
 data = {"name": "Los Angeles", "state": "CA", "country": "USA"}
-db.collection("cities").document("test5").set(data)
+db.collection("cities").document("test6").set(data)

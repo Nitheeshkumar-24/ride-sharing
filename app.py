@@ -1,10 +1,16 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session
 import firebase_admin
 import datetime
 from firebase_admin import credentials, firestore
 import re
+import secrets
+
+def provide_secret_key():
+    return secrets.token_hex(16)
 
 app = Flask(__name__)
+
+app.secret_key = provide_secret_key()
 
 # Initialize Firebase
 cred = credentials.Certificate(r"C:\git files\ride-sharing-b7053-firebase-adminsdk-fbsvc-45494f1901.json")
@@ -133,6 +139,7 @@ def signin():
         if stored_password != password:
             return jsonify({'error': 'Invalid email or password!'}), 401
 
+        session['user_email'] = email
         print(f"User {email} signed in successfully!")
         return jsonify({'message': 'Login successful! Redirecting...'}), 200
 
@@ -145,6 +152,7 @@ def create_ride():
     try:
         data = request.get_json()
         ride_id = get_next_ride_id()
+        user_email = session['user_email']
         
         from_location = data.get('from')
         to_location = data.get('to')
@@ -153,7 +161,8 @@ def create_ride():
         vehicle_type = data.get('vehicle')
         total_seats = int(data.get('passengers'))
         total_price = float(data.get('price'))
-        per_person_cost = total_price / total_seats
+        current_member_count = 1
+        per_person_cost = total_price / current_member_count
 
         # Convert to datetime
         ride_date_and_time = datetime.datetime.strptime(f"{ride_date} {ride_time}", "%Y-%m-%d %H:%M")
@@ -161,6 +170,7 @@ def create_ride():
         # Firestore document
         ride_data = {
             'ride_id': ride_id,
+            'current_member_count': current_member_count,
             'from_location': from_location,
             'to_location': to_location,
             'ride_date_and_time': ride_date_and_time,
@@ -168,7 +178,8 @@ def create_ride():
             'available_seats': total_seats,
             'total_price': total_price,
             'per_person_cost': per_person_cost,
-            'vehicle_type': vehicle_type
+            'vehicle_type': vehicle_type,
+            'owner': user_email
         }
 
         db.collection('rides').document(str(ride_id)).set(ride_data)

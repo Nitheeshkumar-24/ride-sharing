@@ -33,9 +33,54 @@ def index():
     return render_template('index.html')'''
 
 
-@app.route('/r')
+
+@app.route('/ride_creation_page', methods=['GET', 'POST'])
 def ride_creation_page():
-    return render_template('ride_creation.html')
+    if request.method == 'GET':
+        return render_template('ride_creation.html')
+
+    try:
+        data = request.get_json()
+        ride_id = get_next_ride_id()
+        from_location = data.get('from_location')
+        to_location = data.get('to_location')
+        ride_date_and_time = datetime.datetime.strptime(data.get('ride_date_and_time'), '%Y-%m-%dT%H:%M')
+        total_seats = int(data.get('total_seats'))
+        available_seats = total_seats
+        total_price = float(data.get('total_price'))
+        per_person_cost = total_price / total_seats
+        vehicle_id = int(data.get('vehicle_id'))
+        passenger_emails = data.get('passenger_emails', [])
+
+        # Store data in rides collection
+        ride_data = {
+            'ride_id': ride_id,
+            'from_location': from_location,
+            'to_location': to_location,
+            'ride_date_and_time': ride_date_and_time,
+            'total_seats': total_seats,
+            'available_seats': available_seats,
+            'total_price': total_price,
+            'per_person_cost': per_person_cost,
+            'vehicle_id': vehicle_id
+        }
+        db.collection('rides').document(str(ride_id)).set(ride_data)
+
+        # Store data in passenger_booking collection
+        for email in passenger_emails:
+            booking_data = {
+                'ride_id': ride_id,
+                'passenger_email': email,
+                'seat_count': len(passenger_emails),
+                'total_amount': total_price
+            }
+            db.collection('passenger_booking').add(booking_data)
+
+        return render_template('ride_creation.html')
+
+    except Exception as e:
+        print('Error:', str(e))
+        return jsonify({'error': 'Failed to create ride and store bookings'}), 500
 
 
 @app.route('/filter_page')

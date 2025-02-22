@@ -106,55 +106,30 @@
         <div class="available-rides">
             <h3>Available Rides</h3>
 
-            <!-- Ride 1 -->
+            {% for ride in rides %}
             <div class="ride-box">
-                <p><strong>Date:</strong> 2025-02-20</p>
-                <p><strong>Time:</strong> 10:30 AM</p>
-                <p><strong>From:</strong> Downtown</p>
-                <p><strong>To:</strong> Airport</p>
-                <p><strong>Vehicle:</strong> Car</p>
-                <p><strong>Price:</strong> ₹1200</p>
-                <button class="select-btn" onclick="selectRide('2025-02-20', '10:30 AM', 'Downtown', 'Airport', 'Car', '1200')">Select Ride</button>
+                <p><strong>Date:</strong> {{ ride.ride_date_and_time.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                <p><strong>From:</strong> {{ ride.from_location }}</p>
+                <p><strong>To:</strong> {{ ride.to_location }}</p>
+                <p><strong>Vehicle:</strong> {{ ride.vehicle_id }}</p>
+                <p><strong>Seats Available:</strong> {{ ride.available_seats }}</p>
+                <p><strong>Price:</strong> ₹{{ ride.total_price }}</p>
+                <button class="select-btn" onclick="selectRide('{{ ride.ride_date_and_time }}', '{{ ride.from_location }}', '{{ ride.to_location }}', '{{ ride.vehicle_id }}', '{{ ride.total_price }}')">Select Ride</button>
             </div>
-
-            <!-- Ride 2 -->
-            <div class="ride-box">
-                <p><strong>Date:</strong> 2025-02-21</p>
-                <p><strong>Time:</strong> 2:00 PM</p>
-                <p><strong>From:</strong> City Center</p>
-                <p><strong>To:</strong> University</p>
-                <p><strong>Vehicle:</strong> Auto</p>
-                <p><strong>Price:</strong> ₹300</p>
-                <button class="select-btn" onclick="selectRide('2025-02-21', '2:00 PM', 'City Center', 'University', 'Auto', '300')">Select Ride</button>
-            </div>
-
-            <!-- Ride 3 -->
-            <div class="ride-box">
-                <p><strong>Date:</strong> 2025-02-22</p>
-                <p><strong>Time:</strong> 6:45 PM</p>
-                <p><strong>From:</strong> Train Station</p>
-                <p><strong>To:</strong> Mall</p>
-                <p><strong>Vehicle:</strong> Car</p>
-                <p><strong>Price:</strong> ₹500</p>
-                <button class="select-btn" onclick="selectRide('2025-02-22', '6:45 PM', 'Train Station', 'Mall', 'Car', '500')">Select Ride</button>
-            </div>
+            {% else %}
+            <p>No rides available.</p>
+            {% endfor %}
         </div>
     </div>
 
     <script>
-        function selectRide(date, time, from, to, vehicle, price) {
+        function selectRide(date, from, to, vehicle, price) {
             let selectedRides = JSON.parse(localStorage.getItem("myRides")) || [];
-
-            let ride = { date, time, from, to, vehicle, price, owner: "Ride Owner" };
-
+            let ride = { date, from, to, vehicle, price, owner: "Ride Owner" };
             selectedRides.push(ride);
-
             localStorage.setItem("myRides", JSON.stringify(selectedRides));
-
             alert("Ride selected successfully!");
-
-            // Redirect to "My Rides"
-            window.location.href = "my_rides.html";
+            window.location.href = "/my_rides_page";
         }
 
         document.getElementById("ride-creation").addEventListener("click", function () {

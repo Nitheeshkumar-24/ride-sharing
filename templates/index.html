@@ -96,10 +96,10 @@
 
         <!-- Navigation Buttons -->
         <div>
-            <a href="ride_creation.html" class="btn">Create a Ride</a>
-            <a href="filter.html" class="btn">Filter</a>
-            <a href="ride_history.html" class="btn">Ride History</a>
-            <a href="my_rides.html" class="btn">My Rides</a>
+            <a class="btn" id="ride-creation">Create a Ride</a>
+            <a class="btn" id="filter">Filter</a>
+            <a class="btn" id="ride-history">Ride History</a>
+            <a class="btn" id="my-rides">My Rides</a>
         </div>
 
         <!-- Available Rides Section -->
@@ -156,6 +156,22 @@
             // Redirect to "My Rides"
             window.location.href = "my_rides.html";
         }
+
+        document.getElementById("ride-creation").addEventListener("click", function () {
+            window.location.href = "/ride_creation_page";
+        });
+
+        document.getElementById("filter").addEventListener("click", function () {
+            window.location.href = "/filter_page";
+        });
+
+        document.getElementById("ride-history").addEventListener("click", function () {
+            window.location.href = "/ride_history_page";
+        });
+
+        document.getElementById("my-rides").addEventListener("click", function () {
+            window.location.href = "/my_rides_page";
+        });
     </script>
 </body>
 </html>

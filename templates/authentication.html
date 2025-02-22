@@ -86,7 +86,7 @@
             <button class="toggle-btn" id="signUpBtn">Sign Up</button>
         </div>
 
-        <form id ="loginForm " action="/signin" method="POST">
+        <form id ="loginForm" action="/signin" method="POST">
             <div class="input-group">
                 <input type="email" name="email" placeholder="Email address" required>
             </div>
@@ -138,46 +138,53 @@
         signUpBtn.addEventListener('click', () => toggleForms(true));
         toggleForms(false);
 
-        loginForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
+        document.getElementById('loginForm').addEventListener('submit', async function(event) {
+                event.preventDefault();
 
-            const users = JSON.parse(localStorage.getItem('users')) || [];
-            const user = users.find(u => u.email === email && u.password === password);
+                let formData = new FormData(this);
 
-            if (user) {
-                alert('Login successful!');
-                localStorage.setItem('loggedInUser', JSON.stringify(user));
-                window.location.href = '/index';
-            } else {
-                alert('Invalid email or password!');
-            }
-        });
+                try {
+                    let response = await fetch('/signin', {
+                        method: 'POST',
+                        body: formData
+                    });
 
-        signUpForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const email = document.getElementById('signUpEmail').value;
-            const name = document.getElementById('fullName').value;
-            const universityID = document.getElementById('universityID').value;
-            const gender = document.getElementById('gender').value;
-            const password = document.getElementById('signUpPassword').value;
+                    let result = await response.json();
 
-            let users = JSON.parse(localStorage.getItem('users')) || [];
-            const userExists = users.some(user => user.email === email);
+                    if (response.ok) {
+                        alert(result.message);
+                        window.location.href = "/index"; // Redirect after successful login
+                    } else {
+                        alert(result.error);
+                    }
+                } catch (error) {
+                    alert("Error occurred: " + error);
+                }
+            });
 
-            if (userExists) {
-                alert('Email already exists. Please log in.');
-                return;
-            }
+        document.getElementById('signUpForm').addEventListener('submit', async function(event) {
+                event.preventDefault(); // Prevent default form submission
 
-            const newUser = { email, name, universityID, gender, password };
-            users.push(newUser);
-            localStorage.setItem('users', JSON.stringify(users));
+                let formData = new FormData(this);
 
-            alert('Sign-up successful! Redirecting to login...');
-            toggleForms(false);
-        });
+                try {
+                    let response = await fetch('/register', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    let result = await response.json();
+
+                    if (response.ok) {
+                        alert(result.message);
+                        toggleForms(false); // Switch back to login form
+                    } else {
+                        alert(result.error);
+                    }
+                } catch (error) {
+                    alert("Error occurred: " + error);
+                }
+            });
     </script>
 </body>
 </html>

@@ -62,65 +62,120 @@
         .back-btn:hover {
             background: #218838;
         }
+        .pagination {
+            margin-top: 1rem;
+            display: flex;
+            justify-content: center;
+        }
+        .pagination button {
+            padding: 0.5rem 1rem;
+            margin: 0 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background: #007bff;
+            color: white;
+        }
+        .pagination button:hover {
+            background: #0056b3;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>My Rides</h2>
         <div id="myRidesList">
-            <p>No rides found!</p>
+            <p>Loading rides...</p>
         </div>
-        <button class="btn back-btn" onclick="goBack()">Back</button>
+        <div class="pagination" id="pagination"></div>
+        <button class="btn back-btn" id="go-back-button">Back</button>
     </div>
 
     <script>
-        function loadMyRides() {
+        let currentPage = 1;
+        const ridesPerPage = 10;
+
+        async function loadMyRides(page = 1) {
             const myRidesContainer = document.getElementById("myRidesList");
-            myRidesContainer.innerHTML = ""; 
-            const rides = JSON.parse(localStorage.getItem("myRides")) || [];
+            myRidesContainer.innerHTML = "<p>Loading rides...</p>";
 
-            if (rides.length === 0) {
-                myRidesContainer.innerHTML = "<p>No rides found!</p>";
-                return;
+            try {
+                let response = await fetch(`/get_my_rides?page=${page}`);
+                let result = await response.json();
+
+                if (response.ok) {
+                    myRidesContainer.innerHTML = "";
+
+                    if (!result.rides || result.rides.length === 0) {
+                        myRidesContainer.innerHTML = "<p>No upcoming rides found!</p>";
+                        return;
+                    }
+
+                    result.rides.forEach((ride) => {
+                        console.log("Ride Data:", ride);  // Debugging log
+
+                        const vehicleType = ride.vehicle_type || "Unknown"; // Fallback if missing
+
+                        const rideBox = document.createElement("div");
+                        rideBox.classList.add("ride-box");
+                        rideBox.innerHTML = `
+                            <p><strong>From:</strong> ${ride.from_location}</p>
+                            <p><strong>To:</strong> ${ride.to_location}</p>
+                            <p><strong>Date:</strong> ${new Date(ride.ride_date_and_time).toLocaleString()}</p>
+                            <p><strong>Vehicle:</strong> ${vehicleType}</p>
+                            <p><strong>Price:</strong> ₹${ride.total_price}</p>
+                            <button class="btn cancel-btn" onclick="cancelRide('${ride.ride_id}')">Cancel Ride</button>
+                            <button class="btn chat-btn" onclick="chatWithDriver('${ride.ride_id}')">Chat</button>
+                        `;
+                        myRidesContainer.appendChild(rideBox);
+                    });
+
+                    // Update pagination
+                    updatePagination(result.total_pages, page);
+                } else {
+                    myRidesContainer.innerHTML = `<p>Error loading rides: ${result.error}</p>`;
+                }
+            } catch (error) {
+                console.error("Error fetching rides:", error);
+                myRidesContainer.innerHTML = "<p>Failed to load rides.</p>";
             }
-
-            rides.forEach((ride, index) => {
-                const rideBox = document.createElement("div");
-                rideBox.classList.add("ride-box");
-                rideBox.innerHTML = `
-                    <p><strong>From:</strong> ${ride.from}</p>
-                    <p><strong>To:</strong> ${ride.to}</p>
-                    <p><strong>Date:</strong> ${ride.date}</p>
-                    <p><strong>Vehicle:</strong> ${ride.vehicle}</p>
-                    <p><strong>Price:</strong> ₹${ride.price}</p>
-                    <button class="btn cancel-btn" onclick="cancelRide(${index})">Cancel Ride</button>
-                    <button class="btn chat-btn" onclick="chatWithDriver(${index})">Chat</button>
-                `;
-                myRidesContainer.appendChild(rideBox);
-            });
         }
 
-        function cancelRide(index) {
-            let confirmCancel = confirm("Are you sure you want to cancel this ride?");
-            if (confirmCancel) {
-                let rides = JSON.parse(localStorage.getItem("myRides")) || [];
-                rides.splice(index, 1);
-                localStorage.setItem("myRides", JSON.stringify(rides));
-                loadMyRides();
-                alert("Ride Cancelled Successfully!");
+        function updatePagination(totalPages, currentPage) {
+            const paginationContainer = document.getElementById("pagination");
+            paginationContainer.innerHTML = "";
+
+            for (let i = 1; i <= totalPages; i++) {
+                let button = document.createElement("button");
+                button.textContent = i;
+                if (i === currentPage) {
+                    button.style.background = "#0056b3";
+                }
+                button.onclick = () => {
+                    currentPage = i;
+                    loadMyRides(i);
+                };
+                paginationContainer.appendChild(button);
             }
         }
 
-        function chatWithDriver(index) {
-            alert("Redirecting to chat with driver for ride #" + (index + 1));
-            window.location.href = "chat.html";  // Replace with actual chat page
+        function cancelRide(rideId) {
+            alert(`Cancel ride with ID: ${rideId}`);
+        }
+
+        function chatWithDriver(rideId) {
+            alert(`Chat with driver for ride ID: ${rideId}`);
         }
 
         function goBack() {
             window.location.href = "index.html";
         }
 
-        window.onload = loadMyRides;
+        window.onload = () => loadMyRides(currentPage);
+
+        document.getElementById("go-back-button").addEventListener("click", function () {
+            window.location.href = "/index";
+        });
     </script>
 </body>
 </html>

@@ -3,7 +3,7 @@ import firebase_admin
 import datetime
 from firebase_admin import credentials, firestore
 import re
-import secrets
+import secrets, pytz
 
 def provide_secret_key():
     return secrets.token_hex(16)
@@ -13,7 +13,7 @@ app = Flask(__name__)
 app.secret_key = provide_secret_key()
 
 # Initialize Firebase
-cred = credentials.Certificate(r"e:\git files\ride-sharing-b7053-firebase-adminsdk-fbsvc-45494f1901.json")
+cred = credentials.Certificate(r"C:\git files\ride-sharing-b7053-firebase-adminsdk-fbsvc-45494f1901.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
@@ -61,6 +61,8 @@ def ride_history_page():
 @app.route('/my_rides_page')
 def my_rides_page():
     return render_template('my_rides.html')
+
+
 
 @app.route('/index')
 def index():
@@ -189,6 +191,64 @@ def create_ride():
     except Exception as e:
         print('Error:', str(e))
         return jsonify({'error': f'Failed to create ride: {str(e)}'}), 500
+    
+
+# Add this inside the /get_my_rides route
+@app.route('/get_my_rides', methods=['GET'])
+def get_my_rides():
+    try:
+        if 'user_email' not in session:
+            return jsonify({'error': 'Unauthorized access!'}), 401
+
+        user_email = session['user_email']
+
+        # Ensure current_time is timezone-aware
+        current_time = datetime.datetime.now(datetime.timezone.utc)
+
+        page = int(request.args.get('page', 1))
+        rides_per_page = 10
+
+        rides_ref = db.collection('rides').where('owner', '==', user_email)
+        rides_stream = rides_ref.stream()
+
+        all_rides = []
+        for ride in rides_stream:
+            ride_data = ride.to_dict()
+
+            # Debugging log to check retrieved data
+            print("Fetched Ride Data:", ride_data)
+
+            # Ensure ride_date_and_time is correctly formatted
+            if 'ride_date_and_time' in ride_data:
+                ride_date_time = ride_data['ride_date_and_time']
+
+                if isinstance(ride_date_time, datetime.datetime):
+                    if ride_date_time.tzinfo is None:
+                        ride_date_time = ride_date_time.replace(tzinfo=datetime.timezone.utc)
+                else:
+                    ride_date_time = ride_date_time.to_datetime()
+
+                ride_data['ride_date_and_time'] = ride_date_time
+
+                # Ensure all required fields exist
+                ride_data['vehicle_type'] = ride_data.get('vehicle_type', 'Unknown')  # Fallback if missing
+
+                # Compare only if both are timezone-aware
+                if ride_date_time > current_time:
+                    all_rides.append(ride_data)
+
+        # Pagination logic
+        total_rides = len(all_rides)
+        total_pages = (total_rides + rides_per_page - 1) // rides_per_page
+        start = (page - 1) * rides_per_page
+        end = start + rides_per_page
+        rides_to_display = all_rides[start:end]
+
+        return jsonify({'rides': rides_to_display, 'total_pages': total_pages}), 200
+
+    except Exception as e:
+        print("Error:", str(e))
+        return jsonify({'error': f'Failed to fetch rides: {str(e)}'}), 500
     
 
 if __name__ == '__main__':

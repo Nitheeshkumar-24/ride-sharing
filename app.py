@@ -231,7 +231,7 @@ def get_my_rides():
                 ride_data['ride_date_and_time'] = ride_date_time
 
                 # Ensure all required fields exist
-                ride_data['vehicle_id'] = ride_data.get('vehicle_id', 'Unknown')  # Fallback if missing
+                ride_data['vehicle_type'] = ride_data.get('vehicle_id', 'Unknown')  # Fallback if missing
 
                 # Compare only if both are timezone-aware
                 if ride_date_time > current_time:

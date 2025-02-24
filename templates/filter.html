@@ -114,122 +114,79 @@
     <div class="container">
         <h2>Filter Rides</h2>
 
-        <!-- Filter Form -->
-        <div class="filter-group">
-            <label for="from">From</label>
-            <input type="text" id="from" placeholder="Enter starting location">
-        </div>
+        <form id="filter-form">
+            <div class="filter-group">
+                <label for="from">From</label>
+                <input type="text" id="from" name="from" placeholder="Enter starting location">
+            </div>
 
-        <div class="filter-group">
-            <label for="to">To</label>
-            <input type="text" id="to" placeholder="Enter destination">
-        </div>
+            <div class="filter-group">
+                <label for="to">To</label>
+                <input type="text" id="to" name="to" placeholder="Enter destination">
+            </div>
 
-        <div class="filter-group">
-            <label for="vehicle">Vehicle Type</label>
-            <select id="vehicle">
-                <option value="">Any</option>
-                <option value="Car">Car</option>
-                <option value="Auto">Auto</option>
-            </select>
-        </div>
+            <div class="filter-group">
+                <label for="vehicle">Vehicle Type</label>
+                <select id="vehicle" name="vehicle">
+                    <option value="">Any</option>
+                    <option value="Car">Car</option>
+                    <option value="Auto">Auto</option>
+                </select>
+            </div>
 
-        <div class="filter-group">
-            <label for="price">Max Price (₹)</label>
-            <input type="number" id="price" min="0" placeholder="Enter max price">
-        </div>
+            <div class="filter-group">
+                <label for="price">Max Price (₹)</label>
+                <input type="number" id="price" name="max_price" min="0" placeholder="Enter max price">
+            </div>
 
-        <div class="filter-group">
-            <label for="date">Date</label>
-            <input type="date" id="date">
-        </div>
+            <div class="filter-group">
+                <label for="date">Date</label>
+                <input type="date" id="date" name="date">
+            </div>
 
-        <div class="filter-group">
-            <label for="time">Time</label>
-            <input type="time" id="time">
-        </div>
+            <button type="submit" class="btn">Search</button>
+            <button type="button" class="btn" onclick="window.location.href='index.html'">Back</button>
+        </form>
 
-        <button class="btn" onclick="filterRides()">Search</button>
-        <button class="btn" onclick="resetFilters()">Reset</button>
-        <button class="btn" onclick="goBack()">Back</button>
-
-        <!-- Filtered Rides Section -->
         <div class="available-rides" id="rides-container">
             <h3>Available Rides</h3>
         </div>
     </div>
 
     <script>
-        const ridesData = [
-            { from: "Downtown", to: "Airport", vehicle: "Car", price: 150, date: "2025-02-20", time: "10:00" },
-            { from: "Station", to: "City Center", vehicle: "Auto", price: 50, date: "2025-02-21", time: "09:30" },
-            { from: "Mall", to: "University", vehicle: "Car", price: 200, date: "2025-02-22", time: "14:00" }
-        ];
+        document.getElementById('filter-form').addEventListener('submit', function(event) {
+            event.preventDefault();
 
-        function loadRides() {
-            let ridesContainer = document.getElementById("rides-container");
-            ridesContainer.innerHTML = "<h3>Available Rides</h3>";
+            const formData = {
+                from: document.getElementById('from').value,
+                to: document.getElementById('to').value,
+                vehicle: document.getElementById('vehicle').value,
+                max_price: document.getElementById('price').value || null,
+                date: document.getElementById('date').value
+            };
 
-            ridesData.forEach((ride, index) => {
-                let rideElement = `
-                    <div class="ride-box" data-index="${index}">
-                        <p><strong>From:</strong> ${ride.from}</p>
-                        <p><strong>To:</strong> ${ride.to}</p>
-                        <p><strong>Vehicle:</strong> ${ride.vehicle}</p>
-                        <p><strong>Price:</strong> ₹${ride.price}</p>
-                        <p><strong>Date:</strong> ${ride.date}</p>
-                        <p><strong>Time:</strong> ${ride.time}</p>
-                        <button class="btn select-btn" onclick="selectRide(${index})">Select Ride</button>
-                    </div>
-                `;
-                ridesContainer.innerHTML += rideElement;
-            });
-        }
-
-        function filterRides() {
-            let from = document.getElementById("from").value.toLowerCase();
-            let to = document.getElementById("to").value.toLowerCase();
-            let vehicle = document.getElementById("vehicle").value;
-            let maxPrice = document.getElementById("price").value;
-            let date = document.getElementById("date").value;
-            let time = document.getElementById("time").value;
-
-            document.querySelectorAll(".ride-box").forEach(ride => {
-                let index = ride.getAttribute("data-index");
-                let rideData = ridesData[index];
-
-                if ((from && !rideData.from.toLowerCase().includes(from)) ||
-                    (to && !rideData.to.toLowerCase().includes(to)) ||
-                    (vehicle && rideData.vehicle !== vehicle) ||
-                    (maxPrice && rideData.price > maxPrice) ||
-                    (date && rideData.date !== date) ||
-                    (time && rideData.time !== time)) {
-                    ride.style.display = "none";
-                } else {
-                    ride.style.display = "block";
-                }
-            });
-        }
-
-        function resetFilters() {
-            document.querySelectorAll(".filter-group input, .filter-group select").forEach(input => input.value = "");
-            document.querySelectorAll(".ride-box").forEach(ride => ride.style.display = "block");
-        }
-
-        function selectRide(index) {
-            let ride = ridesData[index];
-            let selectedRides = JSON.parse(localStorage.getItem("myRides")) || [];
-            selectedRides.push(ride);
-            localStorage.setItem("myRides", JSON.stringify(selectedRides));
-            alert("Ride selected successfully!");
-            window.location.href = "my_rides.html";
-        }
-
-        function goBack() {
-            window.location.href = "index.html";
-        }
-
-        window.onload = loadRides;
+            fetch('/filter_rides', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                const ridesContainer = document.getElementById('rides-container');
+                ridesContainer.innerHTML = '<h3>Available Rides</h3>';
+                data.rides.forEach(ride => {
+                    ridesContainer.innerHTML += `
+                        <div class="ride-box">
+                            <p><strong>From:</strong> ${ride.from_location}</p>
+                            <p><strong>To:</strong> ${ride.to_location}</p>
+                            <p><strong>Vehicle:</strong> ${ride.vehicle_type}</p>
+                            <p><strong>Price:</strong> ₹${ride.per_person_cost}</p>
+                            <p><strong>Date:</strong> ${ride.ride_date_and_time}</p>
+                        </div>`;
+                });
+            })
+            .catch(error => console.error('Error:', error));
+        });
     </script>
 </body>
 </html>

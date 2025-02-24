@@ -262,7 +262,7 @@ def filter_rides():
         from_location = data.get('from')
         to_location = data.get('to')
         ride_date = data.get('date')
-        vehicle_id = data.get('vehicle')
+        vehicle_id = data.get('vehicle_type')
         max_price = data.get('max_price')
 
         # Base query to exclude user's own rides

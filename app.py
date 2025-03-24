@@ -180,7 +180,7 @@ def create_ride():
             'available_seats': total_seats,
             'total_price': total_price,
             'per_person_cost': per_person_cost,
-            'vehicle_type': vehicle_id,
+            'vehicle_id': vehicle_id,
             'owner': user_email
         }
 
@@ -231,7 +231,7 @@ def get_my_rides():
                 ride_data['ride_date_and_time'] = ride_date_time
 
                 # Ensure all required fields exist
-                ride_data['vehicle_type'] = ride_data.get('vehicle_type', 'Unknown')  # Fallback if missing
+                ride_data['vehicle_type'] = ride_data.get('vehicle_id', 'Unknown')  # Fallback if missing
 
                 # Compare only if both are timezone-aware
                 if ride_date_time > current_time:
@@ -249,7 +249,54 @@ def get_my_rides():
     except Exception as e:
         print("Error:", str(e))
         return jsonify({'error': f'Failed to fetch rides: {str(e)}'}), 500
-    
+
+@app.route('/filter_rides', methods=['POST'])
+def filter_rides():
+    try:
+        if 'user_email' not in session:
+            return jsonify({'error': 'Unauthorized access!'}), 401
+
+        user_email = session['user_email']
+
+        data = request.get_json()
+        from_location = data.get('from')
+        to_location = data.get('to')
+        ride_date = data.get('date')
+        vehicle_id = data.get('vehicle_type')
+        max_price = data.get('max_price')
+
+        # Base query to exclude user's own rides
+        query = db.collection('rides').where('owner', '!=', user_email)
+
+        # Add filters dynamically
+        if from_location:
+            query = query.where('from_location', '==', from_location)
+        if to_location:
+            query = query.where('to_location', '==', to_location)
+        if ride_date:
+            ride_date = datetime.datetime.strptime(ride_date, "%Y-%m-%d")
+            query = query.where('ride_date_and_time', '>=', ride_date)
+        
+        rides = [ride.to_dict() for ride in query.stream()]
+
+        # Filter by vehicle type manually since Firestore doesn't support OR queries
+        if vehicle_id and vehicle_id != "Any":
+            rides = [ride for ride in rides if ride.get('vehicle_id') == vehicle_id]
+
+        elif vehicle_id == "Any":
+            rides = [ride for ride in rides if ride.get('vehicle_id') in ['Car', 'Auto']]
+
+        # Max price filter
+        if max_price:
+            rides = [ride for ride in rides if ride.get('per_person_cost', 0) <= float(max_price)]
+
+        return jsonify({'rides': rides}), 200
+
+    except Exception as e:
+        print("Error:", str(e))
+        return jsonify({'error': 'Failed to filter rides'}), 500
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -99,13 +99,18 @@
             color: #444;
         }
 
-        .ride-box .select-btn {
+        .select-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 0.5rem;
+            border-radius: 5px;
+            cursor: pointer;
             width: 100%;
             margin-top: 1rem;
-            background: #28a745;
         }
 
-        .ride-box .select-btn:hover {
+        .select-btn:hover {
             background: #218838;
         }
     </style>
@@ -128,7 +133,7 @@
             <div class="filter-group">
                 <label for="vehicle">Vehicle Type</label>
                 <select id="vehicle" name="vehicle">
-                    <option value="">Any</option>
+                    <option value="Any">Any</option>
                     <option value="Car">Car</option>
                     <option value="Auto">Auto</option>
                 </select>
@@ -145,7 +150,7 @@
             </div>
 
             <button type="submit" class="btn">Search</button>
-            <button type="button" class="btn" onclick="window.location.href='index.html'">Back</button>
+            <button type="button" class="btn" id="go-back-button">Back</button>
         </form>
 
         <div class="available-rides" id="rides-container">
@@ -154,6 +159,10 @@
     </div>
 
     <script>
+        function goBack() {
+            window.location.href = '/index';
+        }
+
         document.getElementById('filter-form').addEventListener('submit', function(event) {
             event.preventDefault();
 
@@ -174,18 +183,32 @@
             .then(data => {
                 const ridesContainer = document.getElementById('rides-container');
                 ridesContainer.innerHTML = '<h3>Available Rides</h3>';
-                data.rides.forEach(ride => {
-                    ridesContainer.innerHTML += `
-                        <div class="ride-box">
-                            <p><strong>From:</strong> ${ride.from_location}</p>
-                            <p><strong>To:</strong> ${ride.to_location}</p>
-                            <p><strong>Vehicle:</strong> ${ride.vehicle_type}</p>
-                            <p><strong>Price:</strong> ₹${ride.per_person_cost}</p>
-                            <p><strong>Date:</strong> ${ride.ride_date_and_time}</p>
-                        </div>`;
-                });
+
+                if (data.rides.length === 0) {
+                    ridesContainer.innerHTML += '<p>No rides found.</p>';
+                } else {
+                    data.rides.forEach(ride => {
+                        ridesContainer.innerHTML += `
+                            <div class="ride-box">
+                                <p><strong>From:</strong> ${ride.from_location}</p>
+                                <p><strong>To:</strong> ${ride.to_location}</p>
+                                <p><strong>Vehicle:</strong> ${ride.vehicle_id}</p>
+                                <p><strong>Price:</strong> ₹${ride.per_person_cost}</p>
+                                <p><strong>Date:</strong> ${new Date(ride.ride_date_and_time).toLocaleString()}</p>
+                                <button class="select-btn" onclick="selectRide('${ride.ride_id}')">Select</button>
+                            </div>`;
+                    });
+                }
             })
             .catch(error => console.error('Error:', error));
+        });
+
+        function selectRide(rideId) {
+            alert('Selected ride ID: ' + rideId);
+        }
+
+        document.getElementById("go-back-button").addEventListener("click", function () {
+            window.location.href = "/index";
         });
     </script>
 </body>

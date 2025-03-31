@@ -13,7 +13,7 @@ app = Flask(__name__)
 app.secret_key = provide_secret_key()
 
 # Initialize Firebase
-cred = credentials.Certificate(r"e:\git files\ride-sharing-b7053-firebase-adminsdk-fbsvc-45494f1901.json")
+cred = credentials.Certificate(r"C:\git files\ride-sharing-b7053-firebase-adminsdk-fbsvc-45494f1901.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
@@ -296,6 +296,38 @@ def filter_rides():
         print("Error:", str(e))
         return jsonify({'error': 'Failed to filter rides'}), 500
 
+
+@app.route('/get_past_rides', methods=['GET'])
+def get_past_rides():
+    try:
+        if 'user_email' not in session:
+            return jsonify({'error': 'Unauthorized access!'}), 401
+
+        user_email = session['user_email']
+        current_time = datetime.datetime.now(datetime.timezone.utc)
+
+        rides_ref = db.collection('rides').where('owner', '==', user_email)
+        rides_stream = rides_ref.stream()
+
+        past_rides = []
+        for ride in rides_stream:
+            ride_data = ride.to_dict()
+
+            if 'ride_date_and_time' in ride_data:
+                ride_date_time = ride_data['ride_date_and_time']
+                if isinstance(ride_date_time, datetime.datetime):
+                    if ride_date_time.tzinfo is None:
+                        ride_date_time = ride_date_time.replace(tzinfo=datetime.timezone.utc)
+                else:
+                    ride_date_time = ride_date_time.to_datetime()
+
+                if ride_date_time < current_time:
+                    past_rides.append(ride_data)
+
+        return jsonify({'rides': past_rides}), 200
+    except Exception as e:
+        print("Error:", str(e))
+        return jsonify({'error': 'Failed to fetch past rides'}), 500
 
 
 if __name__ == '__main__':

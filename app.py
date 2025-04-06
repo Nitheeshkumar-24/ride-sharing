@@ -65,7 +65,7 @@ def my_rides_page():
     return render_template('my_rides.html')
 
 
-
+"""
 @app.route('/index')
 def index():
     try:
@@ -77,7 +77,36 @@ def index():
 
     except Exception as e:
         print("Error:", str(e))
+        return "Failed to fetch rides", 500"""
+@app.route('/index')
+def index():
+    try:
+        current_time = datetime.datetime.now(datetime.timezone.utc)
+
+        rides_ref = db.collection('rides')
+        rides = []
+
+        for ride in rides_ref.stream():
+            ride_data = ride.to_dict()
+            ride_datetime = ride_data.get('ride_date_and_time')
+
+            # Ensure the date is a datetime object
+            if isinstance(ride_datetime, datetime.datetime):
+                if ride_datetime.tzinfo is None:
+                    ride_datetime = ride_datetime.replace(tzinfo=datetime.timezone.utc)
+            else:
+                ride_datetime = ride_datetime.to_datetime()
+
+            if ride_datetime > current_time:
+                ride_data['ride_date_and_time'] = ride_datetime  # Optional: include if used in HTML
+                rides.append(ride_data)
+
+        return render_template('index.html', rides=rides)
+
+    except Exception as e:
+        print("Error:", str(e))
         return "Failed to fetch rides", 500
+
 
 
 @app.route('/register', methods=['POST'])

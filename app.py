@@ -13,7 +13,7 @@ app = Flask(__name__)
 app.secret_key = provide_secret_key()
 
 # Initialize Firebase
-cred = credentials.Certificate(r"C:\git files\ride-sharing-b7053-firebase-adminsdk-fbsvc-45494f1901.json")
+cred = credentials.Certificate(r"e:\git files\ride-sharing-b7053-firebase-adminsdk-fbsvc-45494f1901.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
@@ -41,13 +41,15 @@ def authentication():
 def index():
     return render_template('index.html')'''
 
+"""
+# Filter page (HTML form)
+@app.route('/filter_page', methods=['GET'])
+def filter_page():
+    if 'user_email' not in session:
+        return redirect('/login')
+    return render_template('filter.html')
 
-
-@app.route('/ride_creation_page')
-def ride_creation_page():
-    return render_template('ride_creation.html')
-
-
+"""
 @app.route('/filter_page')
 def filter_page():
     return render_template('filter.html')
@@ -252,49 +254,62 @@ def get_my_rides():
 
 @app.route('/filter_rides', methods=['POST'])
 def filter_rides():
-    try:
-        if 'user_email' not in session:
-            return jsonify({'error': 'Unauthorized access!'}), 401
+    if 'user_email' not in session:
+        return "Unauthorized", 401
 
-        user_email = session['user_email']
+    data = request.get_json()
 
-        data = request.get_json()
-        from_location = data.get('from')
-        to_location = data.get('to')
-        ride_date = data.get('date')
-        vehicle_id = data.get('vehicle_type')
-        max_price = data.get('max_price')
+    from_location = data.get('from', '').strip().lower()
+    to_location = data.get('to', '').strip().lower()
+    vehicle = data.get('vehicle', 'Any')
+    max_price = data.get('max_price')
+    ride_date = data.get('date')  # format: YYYY-MM-DD
 
-        # Base query to exclude user's own rides
-        query = db.collection('rides').where('owner', '!=', user_email)
+    # Get all rides from Firestore
+    rides_ref = db.collection('rides')
+    rides = rides_ref.stream()
 
-        # Add filters dynamically
-        if from_location:
-            query = query.where('from_location', '==', from_location)
-        if to_location:
-            query = query.where('to_location', '==', to_location)
-        if ride_date:
-            ride_date = datetime.datetime.strptime(ride_date, "%Y-%m-%d")
-            query = query.where('ride_date_and_time', '>=', ride_date)
-        
-        rides = [ride.to_dict() for ride in query.stream()]
+    matched_rides = []
 
-        # Filter by vehicle type manually since Firestore doesn't support OR queries
-        if vehicle_id and vehicle_id != "Any":
-            rides = [ride for ride in rides if ride.get('vehicle_id') == vehicle_id]
+    for ride in rides:
+        ride_data = ride.to_dict()
+        ride_id = ride.id
+        ride_data['ride_id'] = ride_id
 
-        elif vehicle_id == "Any":
-            rides = [ride for ride in rides if ride.get('vehicle_id') in ['Car', 'Auto']]
+        ride_from = ride_data.get('from_location', '').strip().lower()
+        ride_to = ride_data.get('to_location', '').strip().lower()
+        ride_vehicle = ride_data.get('vehicle_id', '').strip()
+        ride_price = ride_data.get('per_person_cost')
+        ride_datetime = ride_data.get('ride_date_and_time')
 
-        # Max price filter
+        # Ensure ride_datetime is a datetime object
+        if not isinstance(ride_datetime, datetime.datetime):
+            continue
+
+        # 🧠 Filtering logic
+        if from_location and from_location not in ride_from:
+            continue
+        if to_location and to_location not in ride_to:
+            continue
+        if vehicle != 'Any' and vehicle.lower() != ride_vehicle.lower():
+            continue
         if max_price:
-            rides = [ride for ride in rides if ride.get('per_person_cost', 0) <= float(max_price)]
+            try:
+                if float(ride_price) > float(max_price):
+                    continue
+            except:
+                continue
+        if ride_date:
+            try:
+                if ride_datetime.date() != datetime.datetime.strptime(ride_date, '%Y-%m-%d').date():
+                    continue
+            except:
+                continue
 
-        return jsonify({'rides': rides}), 200
+        matched_rides.append(ride_data)
 
-    except Exception as e:
-        print("Error:", str(e))
-        return jsonify({'error': 'Failed to filter rides'}), 500
+    return jsonify({'rides': matched_rides})
+
 
 
 @app.route('/get_past_rides', methods=['GET'])

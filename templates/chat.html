@@ -105,10 +105,17 @@
     </div>
 
     <script>
+        // Get ride_id from URL
+        const rideId = new URLSearchParams(window.location.search).get("ride_id");
+
+        function getChatKey() {
+            return `chatHistory_${rideId}`;
+        }
+
         function loadChatHistory() {
             let chatBox = document.getElementById("chatBox");
             chatBox.innerHTML = "";
-            let chatHistory = JSON.parse(localStorage.getItem("chatHistory")) || [];
+            let chatHistory = JSON.parse(localStorage.getItem(getChatKey())) || [];
 
             chatHistory.forEach(chat => {
                 let messageDiv = document.createElement("div");
@@ -131,17 +138,17 @@
             let message = input.value.trim();
             if (message === "") return;
 
-            let chatHistory = JSON.parse(localStorage.getItem("chatHistory")) || [];
+            let chatHistory = JSON.parse(localStorage.getItem(getChatKey())) || [];
             chatHistory.push({ sender: "user", message });
-            localStorage.setItem("chatHistory", JSON.stringify(chatHistory));
+            localStorage.setItem(getChatKey(), JSON.stringify(chatHistory));
 
             input.value = "";
             loadChatHistory();
 
-            // Simulate a driver response
+            // Simulate driver response
             setTimeout(() => {
                 chatHistory.push({ sender: "driver", message: "Got it! See you soon." });
-                localStorage.setItem("chatHistory", JSON.stringify(chatHistory));
+                localStorage.setItem(getChatKey(), JSON.stringify(chatHistory));
                 loadChatHistory();
             }, 1000);
         }

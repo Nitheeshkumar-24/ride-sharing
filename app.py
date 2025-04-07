@@ -276,7 +276,7 @@ def select_ride():
 
 
 
-# Add this inside the /get_my_rides route
+"""# Add this inside the /get_my_rides route
 @app.route('/get_my_rides', methods=['GET'])
 def get_my_rides():
     try:
@@ -331,6 +331,85 @@ def get_my_rides():
 
     except Exception as e:
         print("Error:", str(e))
+        return jsonify({'error': f'Failed to fetch rides: {str(e)}'}), 500"""
+
+
+
+@app.route('/get_my_rides', methods=['GET'])
+def get_my_rides():
+    try:
+        if 'user_email' not in session:
+            return jsonify({'error': 'Unauthorized access!'}), 401
+
+        user_email = session['user_email']
+        current_time = datetime.datetime.now(datetime.timezone.utc)
+        page = int(request.args.get('page', 1))
+        rides_per_page = 10
+
+        # Rides created by the user
+        owner_rides_ref = db.collection('rides').where('owner', '==', user_email)
+        owner_rides_stream = owner_rides_ref.stream()
+
+        # Rides joined by the user (as a passenger)
+        all_rides_ref = db.collection('rides')
+        all_rides_stream = all_rides_ref.stream()
+
+        all_rides = []
+
+        # Add owner rides
+        for ride in owner_rides_stream:
+            ride_data = ride.to_dict()
+            ride_datetime = ride_data.get('ride_date_and_time')
+
+            if isinstance(ride_datetime, datetime.datetime):
+                if ride_datetime.tzinfo is None:
+                    ride_datetime = ride_datetime.replace(tzinfo=datetime.timezone.utc)
+            else:
+                ride_datetime = ride_datetime.to_datetime()
+
+            if ride_datetime > current_time:
+                ride_data['ride_date_and_time'] = ride_datetime
+                ride_data['vehicle_type'] = ride_data.get('vehicle_id', 'Unknown')
+                ride_data['joined_as'] = 'owner'
+                all_rides.append(ride_data)
+
+        # Add rides where user is a passenger (but not owner)
+        for ride in all_rides_stream:
+            ride_data = ride.to_dict()
+
+            if ride_data.get('owner') == user_email:
+                continue  # Already included
+
+            passengers = ride_data.get('passengers', [])
+            if user_email in passengers:
+                ride_datetime = ride_data.get('ride_date_and_time')
+
+                if isinstance(ride_datetime, datetime.datetime):
+                    if ride_datetime.tzinfo is None:
+                        ride_datetime = ride_datetime.replace(tzinfo=datetime.timezone.utc)
+                else:
+                    ride_datetime = ride_datetime.to_datetime()
+
+                if ride_datetime > current_time:
+                    ride_data['ride_date_and_time'] = ride_datetime
+                    ride_data['vehicle_type'] = ride_data.get('vehicle_id', 'Unknown')
+                    ride_data['joined_as'] = 'passenger'
+                    all_rides.append(ride_data)
+
+        # Sort rides by date
+        all_rides.sort(key=lambda x: x['ride_date_and_time'])
+
+        # Pagination
+        total_rides = len(all_rides)
+        total_pages = (total_rides + rides_per_page - 1) // rides_per_page
+        start = (page - 1) * rides_per_page
+        end = start + rides_per_page
+        rides_to_display = all_rides[start:end]
+
+        return jsonify({'rides': rides_to_display, 'total_pages': total_pages}), 200
+
+    except Exception as e:
+        print("Error in get_my_rides:", str(e))
         return jsonify({'error': f'Failed to fetch rides: {str(e)}'}), 500
 
 @app.route('/filter_rides', methods=['POST'])

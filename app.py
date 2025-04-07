@@ -505,6 +505,50 @@ def get_past_rides():
         return jsonify({'error': 'Failed to fetch past rides'}), 500
 
 
+@app.route("/send_message", methods=["POST"])
+def send_message():
+    data = request.get_json()
+    ride_id = data.get("ride_id")
+    sender = data.get("sender")
+    message = data.get("message")
+
+    if not (ride_id and sender and message):
+        return jsonify({"error": "Missing fields"}), 400
+
+    chat_ref = db.collection("chats").document(ride_id).collection("messages")
+    chat_ref.add({
+        "sender": sender,
+        "message": message,
+        "timestamp": datetime.utcnow()
+    })
+
+    return jsonify({"success": True}), 200
+
+# -----------------------------
+# Endpoint to get chat messages
+# -----------------------------
+@app.route("/get_messages", methods=["GET"])
+def get_messages():
+    ride_id = request.args.get("ride_id")
+
+    if not ride_id:
+        return jsonify({"error": "Missing ride_id"}), 400
+
+    messages_ref = db.collection("chats").document(ride_id).collection("messages").order_by("timestamp")
+    messages = messages_ref.stream()
+
+    chat_history = []
+    for msg in messages:
+        data = msg.to_dict()
+        chat_history.append({
+            "sender": data.get("sender"),
+            "message": data.get("message"),
+            "timestamp": data.get("timestamp").isoformat() if data.get("timestamp") else None
+        })
+
+    return jsonify(chat_history), 200
+
+
 if __name__ == '__main__':
     app.run(debug=True)
 

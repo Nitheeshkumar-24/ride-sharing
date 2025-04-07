@@ -34,14 +34,16 @@
             border-radius: 10px;
             padding: 1rem;
             border: 1px solid #ddd;
-            text-align: left;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
         }
         .message {
-            padding: 0.6rem;
+            padding: 0.6rem 1rem;
             border-radius: 10px;
-            margin: 0.5rem 0;
             max-width: 80%;
             word-wrap: break-word;
+            display: inline-block;
         }
         .user-message {
             background: #667eea;
@@ -51,7 +53,9 @@
         }
         .driver-message {
             background: #e2e2e2;
+            color: #333;
             align-self: flex-start;
+            text-align: left;
         }
         .input-container {
             display: flex;
@@ -95,7 +99,7 @@
     <div class="container">
         <h2>Chat with Ride Owner</h2>
         <div class="chat-box" id="chatBox"></div>
-        
+
         <div class="input-container">
             <input type="text" id="messageInput" placeholder="Type your message...">
             <button class="send-btn" onclick="sendMessage()">Send</button>
@@ -149,6 +153,7 @@
                         chatBox.appendChild(messageDiv);
                     });
 
+                    // Scroll to the latest message
                     chatBox.scrollTop = chatBox.scrollHeight;
                 });
         }
@@ -157,7 +162,7 @@
             window.location.href = "my_rides.html";
         }
 
-        // Poll every 2 seconds
+        // Initial chat load and polling
         window.onload = () => {
             loadChatHistory();
             setInterval(loadChatHistory, 2000);

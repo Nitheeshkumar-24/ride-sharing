@@ -105,59 +105,63 @@
     </div>
 
     <script>
-        // Get ride_id from URL
         const rideId = new URLSearchParams(window.location.search).get("ride_id");
+        const userEmail = localStorage.getItem("email");
 
-        function getChatKey() {
-            return `chatHistory_${rideId}`;
+        function sendMessage() {
+            const input = document.getElementById("messageInput");
+            const message = input.value.trim();
+            if (message === "") return;
+
+            fetch("/send_message", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    ride_id: rideId,
+                    sender: userEmail,
+                    message: message
+                })
+            }).then(() => {
+                input.value = "";
+                loadChatHistory();
+            });
         }
 
         function loadChatHistory() {
-            let chatBox = document.getElementById("chatBox");
-            chatBox.innerHTML = "";
-            let chatHistory = JSON.parse(localStorage.getItem(getChatKey())) || [];
+            fetch(`/get_messages?ride_id=${rideId}`)
+                .then(response => response.json())
+                .then(messages => {
+                    const chatBox = document.getElementById("chatBox");
+                    chatBox.innerHTML = "";
 
-            chatHistory.forEach(chat => {
-                let messageDiv = document.createElement("div");
-                messageDiv.classList.add("message");
-                if (chat.sender === "user") {
-                    messageDiv.classList.add("user-message");
-                    messageDiv.innerHTML = `<strong>You:</strong> ${chat.message}`;
-                } else {
-                    messageDiv.classList.add("driver-message");
-                    messageDiv.innerHTML = `<strong>Driver:</strong> ${chat.message}`;
-                }
-                chatBox.appendChild(messageDiv);
-            });
+                    messages.forEach(chat => {
+                        const messageDiv = document.createElement("div");
+                        messageDiv.classList.add("message");
 
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
+                        if (chat.sender === userEmail) {
+                            messageDiv.classList.add("user-message");
+                            messageDiv.innerHTML = `<strong>You:</strong> ${chat.message}`;
+                        } else {
+                            messageDiv.classList.add("driver-message");
+                            messageDiv.innerHTML = `<strong>${chat.sender}:</strong> ${chat.message}`;
+                        }
 
-        function sendMessage() {
-            let input = document.getElementById("messageInput");
-            let message = input.value.trim();
-            if (message === "") return;
+                        chatBox.appendChild(messageDiv);
+                    });
 
-            let chatHistory = JSON.parse(localStorage.getItem(getChatKey())) || [];
-            chatHistory.push({ sender: "user", message });
-            localStorage.setItem(getChatKey(), JSON.stringify(chatHistory));
-
-            input.value = "";
-            loadChatHistory();
-
-            // Simulate driver response
-            setTimeout(() => {
-                chatHistory.push({ sender: "driver", message: "Got it! See you soon." });
-                localStorage.setItem(getChatKey(), JSON.stringify(chatHistory));
-                loadChatHistory();
-            }, 1000);
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                });
         }
 
         function goBack() {
             window.location.href = "my_rides.html";
         }
 
-        window.onload = loadChatHistory;
+        // Poll every 2 seconds
+        window.onload = () => {
+            loadChatHistory();
+            setInterval(loadChatHistory, 2000);
+        };
     </script>
 </body>
 </html>

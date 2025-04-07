@@ -113,8 +113,9 @@
                 <p><strong>To:</strong> {{ ride.to_location }}</p>
                 <p><strong>Vehicle:</strong> {{ ride.vehicle_id }}</p>
                 <p><strong>Seats Available:</strong> {{ ride.available_seats }}</p>
+                <p><strong>Total Passengers:</strong> {{ ride.current_member_count }}</p>
                 <p><strong>Price:</strong> ₹{{ ride.total_price }}</p>
-                <button class="select-btn" onclick="selectRide('{{ ride.ride_date_and_time }}', '{{ ride.from_location }}', '{{ ride.to_location }}', '{{ ride.vehicle_id }}', '{{ ride.total_price }}')">Select Ride</button>
+                <button class="select-btn" onclick="joinRide('{{ ride.ride_id }}')">Select Ride</button>
             </div>
             {% else %}
             <p>No rides available.</p>
@@ -123,13 +124,25 @@
     </div>
 
     <script>
-        function selectRide(date, from, to, vehicle, price) {
-            let selectedRides = JSON.parse(localStorage.getItem("myRides")) || [];
-            let ride = { date, from, to, vehicle, price, owner: "Ride Owner" };
-            selectedRides.push(ride);
-            localStorage.setItem("myRides", JSON.stringify(selectedRides));
-            alert("Ride selected successfully!");
-            window.location.href = "/my_rides_page";
+        function joinRide(rideId) {
+            fetch('/select_ride', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ ride_id: rideId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message || data.error);
+                if (data.message) {
+                    location.reload(); // Refresh to update seat/passenger count
+                }
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                alert("Something went wrong!");
+            });
         }
 
         document.getElementById("ride-creation").addEventListener("click", function () {

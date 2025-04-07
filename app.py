@@ -64,6 +64,11 @@ def ride_history_page():
 def my_rides_page():
     return render_template('my_rides.html')
 
+@app.route('/ride_creation_page')
+def ride_creation_page():
+    return render_template('ride_creation.html')  # or your actual template name
+
+
 
 """
 @app.route('/index')
@@ -183,9 +188,13 @@ def signin():
 @app.route('/create_ride', methods=['POST'])
 def create_ride():
     try:
+        # Safe check for login
+        user_email = session.get('user_email')
+        if not user_email:
+            return jsonify({'error': 'User not logged in'}), 401
+        
         data = request.get_json()
         ride_id = get_next_ride_id()
-        user_email = session['user_email']
         
         from_location = data.get('from')
         to_location = data.get('to')
@@ -197,10 +206,8 @@ def create_ride():
         current_member_count = 1
         per_person_cost = total_price / current_member_count
 
-        # Convert to datetime
         ride_date_and_time = datetime.datetime.strptime(f"{ride_date} {ride_time}", "%Y-%m-%d %H:%M")
 
-        # Firestore document
         ride_data = {
             'ride_id': ride_id,
             'current_member_count': current_member_count,
@@ -208,11 +215,12 @@ def create_ride():
             'to_location': to_location,
             'ride_date_and_time': ride_date_and_time,
             'total_seats': total_seats,
-            'available_seats': total_seats,
+            'available_seats': total_seats - 1,  # 1 seat taken by creator
             'total_price': total_price,
             'per_person_cost': per_person_cost,
             'vehicle_id': vehicle_id,
-            'owner': user_email
+            'owner': user_email,
+            'passengers': [user_email]  # Creator is first passenger
         }
 
         db.collection('rides').document(str(ride_id)).set(ride_data)
@@ -222,7 +230,51 @@ def create_ride():
     except Exception as e:
         print('Error:', str(e))
         return jsonify({'error': f'Failed to create ride: {str(e)}'}), 500
-    
+
+@app.route('/select_ride', methods=['POST'])
+def select_ride():
+    try:
+        data = request.get_json()
+        ride_id = str(data.get('ride_id'))
+        user_email = session['user_email']
+
+        # Get ride document
+        ride_ref = db.collection('rides').document(ride_id)
+        ride_doc = ride_ref.get()
+
+        if not ride_doc.exists:
+            return jsonify({'error': 'Ride not found'}), 404
+
+        ride_data = ride_doc.to_dict()
+        passengers = ride_data.get('passengers', [])
+
+        # Prevent duplicate booking
+        if user_email in passengers:
+            return jsonify({'message': 'You have already joined this ride.'}), 200
+
+        # Check seat availability
+        available_seats = ride_data.get('available_seats', 0)
+        if available_seats <= 0:
+            return jsonify({'error': 'No available seats'}), 400
+
+        # Update passengers list and counters
+        passengers.append(user_email)
+        current_member_count = ride_data.get('current_member_count', 1) + 1
+        available_seats -= 1
+
+        ride_ref.update({
+            'passengers': passengers,
+            'current_member_count': current_member_count,
+            'available_seats': available_seats
+        })
+
+        return jsonify({'message': 'Ride selected successfully'}), 200
+
+    except Exception as e:
+        print("Error selecting ride:", str(e))
+        return jsonify({'error': f'Failed to select ride: {str(e)}'}), 500
+
+
 
 # Add this inside the /get_my_rides route
 @app.route('/get_my_rides', methods=['GET'])

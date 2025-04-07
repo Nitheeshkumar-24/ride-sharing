@@ -109,8 +109,8 @@
     </div>
 
     <script>
-        const rideId = new URLSearchParams(window.location.search).get("ride_id");
-        const userEmail = localStorage.getItem("email");
+        const rideId = "{{ ride_id }}";  // Flask passes ride ID
+        const userEmail = "{{ session['user_email'] }}";  // Logged-in user from Flask
 
         function sendMessage() {
             const input = document.getElementById("messageInput");
@@ -153,16 +153,14 @@
                         chatBox.appendChild(messageDiv);
                     });
 
-                    // Scroll to the latest message
                     chatBox.scrollTop = chatBox.scrollHeight;
                 });
         }
 
         function goBack() {
-            window.location.href = "my_rides.html";
+            window.location.href = "/my_rides";  // Adjust to your actual route
         }
 
-        // Initial chat load and polling
         window.onload = () => {
             loadChatHistory();
             setInterval(loadChatHistory, 2000);

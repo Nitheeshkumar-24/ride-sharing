@@ -504,49 +504,42 @@ def get_past_rides():
         print("Error:", str(e))
         return jsonify({'error': 'Failed to fetch past rides'}), 500
 
-
-@app.route("/send_message", methods=["POST"])
+@app.route('/send_message', methods=['POST'])
 def send_message():
-    data = request.get_json()
-    ride_id = data.get("ride_id")
-    sender = data.get("sender")
-    message = data.get("message")
+    data = request.json
+    ride_id = str(data['ride_id'])
+    sender = data['sender']
+    text = data['text']
 
-    if not (ride_id and sender and message):
-        return jsonify({"error": "Missing fields"}), 400
+    message_data = {
+        'sender': sender,
+        'text': text,
+        'timestamp': datetime.datetime.now(datetime.timezone.utc)
+    }
 
-    chat_ref = db.collection("chats").document(ride_id).collection("messages")
-    chat_ref.add({
-        "sender": sender,
-        "message": message,
-        "timestamp": datetime.utcnow()
-    })
+    db.collection('rides').document(ride_id).collection('messages').add(message_data)
+    return jsonify({'status': 'Message sent'}), 200
 
-    return jsonify({"success": True}), 200
+@app.route('/get_messages/<ride_id>', methods=['GET'])
+def get_messages(ride_id):
+    messages_ref = db.collection('rides').document(ride_id).collection('messages')
+    messages = messages_ref.order_by('timestamp').stream()
 
-# -----------------------------
-# Endpoint to get chat messages
-# -----------------------------
-@app.route("/get_messages", methods=["GET"])
-def get_messages():
-    ride_id = request.args.get("ride_id")
-
-    if not ride_id:
-        return jsonify({"error": "Missing ride_id"}), 400
-
-    messages_ref = db.collection("chats").document(ride_id).collection("messages").order_by("timestamp")
-    messages = messages_ref.stream()
-
-    chat_history = []
+    messages_list = []
     for msg in messages:
-        data = msg.to_dict()
-        chat_history.append({
-            "sender": data.get("sender"),
-            "message": data.get("message"),
-            "timestamp": data.get("timestamp").isoformat() if data.get("timestamp") else None
+        msg_dict = msg.to_dict()
+        messages_list.append({
+            'sender': msg_dict.get('sender', ''),
+            'text': msg_dict.get('text', '')
         })
 
-    return jsonify(chat_history), 200
+    return jsonify({'messages': messages_list}), 200
+
+@app.route('/chat/<ride_id>')
+def chat_page(ride_id):
+    if 'user_email' not in session:
+        return redirect('/login')
+    return render_template('chat.html', ride_id=ride_id)
 
 
 if __name__ == '__main__':

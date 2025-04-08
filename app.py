@@ -5,6 +5,7 @@ from firebase_admin import credentials, firestore
 import re
 import secrets, pytz
 
+
 def provide_secret_key():
     return secrets.token_hex(16)
 
@@ -13,7 +14,7 @@ app = Flask(__name__)
 app.secret_key = provide_secret_key()
 
 # Initialize Firebase
-cred = credentials.Certificate(r"C:\git files\ride-sharing-b7053-firebase-adminsdk-fbsvc-45494f1901.json")
+cred = credentials.Certificate(r"e:\git files\ride-sharing-b7053-firebase-adminsdk-fbsvc-45494f1901.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
@@ -618,6 +619,37 @@ def chat_view():
     
     return render_template('chat.html', ride_id=ride_id, session=session, user_email=session['user']['email'])
 #*********************************************************************************************************
+#cancelling the ride
+@app.route('/cancel_ride', methods=['POST'])
+def cancel_ride():
+    if 'email' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    user_email = session['email']
+    data = request.json
+    ride_id = data.get('ride_id')
+
+    if not ride_id:
+        return jsonify({"error": "Missing ride ID"}), 400
+
+    db = firestore.client()
+    ride_ref = db.collection('rides').document(ride_id)
+    ride_doc = ride_ref.get()
+
+    if not ride_doc.exists:
+        return jsonify({"error": "Ride not found"}), 404
+
+    ride_data = ride_doc.to_dict()
+    passengers = ride_data.get('passengers', [])
+
+    if user_email not in passengers:
+        return jsonify({"error": "User not part of the ride"}), 400
+
+    # Remove user from passengers list
+    updated_passengers = [email for email in passengers if email != user_email]
+    ride_ref.update({"passengers": updated_passengers})
+
+    return jsonify({"success": True})
 
 
 

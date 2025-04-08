@@ -1,175 +1,196 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Rides - ShareNGo</title>
-    <style>
-        body {
-            margin: 0;
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: #333;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-        .container {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 2rem;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            width: 100%;
-            max-width: 600px;
-            text-align: center;
-        }
-        .ride-box {
-            background: #f9f9f9;
-            padding: 1.5rem;
-            border-radius: 10px;
-            margin-bottom: 1.5rem;
-            text-align: left;
-        }
-        .btn {
-            width: 100%;
-            padding: 0.8rem;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            cursor: pointer;
-            margin-top: 0.5rem;
-        }
-        .cancel-btn {
-            background: #dc3545;
-            color: white;
-        }
-        .cancel-btn:hover {
-            background: #c82333;
-        }
-        .chat-btn {
-            background: #007bff;
-            color: white;
-        }
-        .chat-btn:hover {
-            background: #0056b3;
-        }
-        .back-btn {
-            background: #28a745;
-            color: white;
-            margin-top: 1rem;
-        }
-        .back-btn:hover {
-            background: #218838;
-        }
-        .pagination {
-            margin-top: 1rem;
-            display: flex;
-            justify-content: center;
-        }
-        .pagination button {
-            padding: 0.5rem 1rem;
-            margin: 0 5px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            background: #007bff;
-            color: white;
-        }
-        .pagination button:hover {
-            background: #0056b3;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Rides - ShareNGo</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .container {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      width: 100%;
+      max-width: 600px;
+      text-align: center;
+    }
+    .ride-box {
+      background: #f9f9f9;
+      padding: 1.5rem;
+      border-radius: 10px;
+      margin-bottom: 1.5rem;
+      text-align: left;
+    }
+    .btn {
+      width: 100%;
+      padding: 0.8rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-top: 0.5rem;
+    }
+    .cancel-btn {
+      background: #dc3545;
+      color: white;
+    }
+    .cancel-btn:hover {
+      background: #c82333;
+    }
+    .chat-btn {
+      background: #007bff;
+      color: white;
+    }
+    .chat-btn:hover {
+      background: #0056b3;
+    }
+    .back-btn {
+      background: #28a745;
+      color: white;
+      margin-top: 1rem;
+    }
+    .back-btn:hover {
+      background: #218838;
+    }
+    .pagination {
+      margin-top: 1rem;
+      display: flex;
+      justify-content: center;
+    }
+    .pagination button {
+      padding: 0.5rem 1rem;
+      margin: 0 5px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      background: #007bff;
+      color: white;
+    }
+    .pagination button:hover {
+      background: #0056b3;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h2>My Rides</h2>
-        <div id="myRidesList">
-            <p>Loading rides...</p>
-        </div>
-        <div class="pagination" id="pagination"></div>
-        <button class="btn back-btn" id="go-back-button">Back</button>
+  <div class="container">
+    <h2>My Rides</h2>
+    <div id="myRidesList">
+      <p>Loading rides...</p>
     </div>
+    <div class="pagination" id="pagination"></div>
+    <button class="btn back-btn" id="go-back-button">Back</button>
+  </div>
 
-    <script>
-        let currentPage = 1;
-        const ridesPerPage = 10;
+  <script>
+    let currentPage = 1;
 
-        async function loadMyRides(page = 1) {
-            const myRidesContainer = document.getElementById("myRidesList");
-            myRidesContainer.innerHTML = "<p>Loading rides...</p>";
+    async function loadMyRides(page = 1) {
+      const myRidesContainer = document.getElementById("myRidesList");
+      myRidesContainer.innerHTML = "<p>Loading rides...</p>";
 
-            try {
-                let response = await fetch(`/get_my_rides?page=${page}`);
-                let result = await response.json();
-
-                if (response.ok) {
-                    myRidesContainer.innerHTML = "";
-
-                    if (!result.rides || result.rides.length === 0) {
-                        myRidesContainer.innerHTML = "<p>No upcoming rides found!</p>";
-                        return;
-                    }
-
-                    result.rides.forEach((ride) => {
-                        const vehicleType = ride.vehicle_type || "Unknown";
-
-                        const rideBox = document.createElement("div");
-                        rideBox.classList.add("ride-box");
-                        rideBox.innerHTML = `
-                            <p><strong>From:</strong> ${ride.from_location}</p>
-                            <p><strong>To:</strong> ${ride.to_location}</p>
-                            <p><strong>Date:</strong> ${new Date(ride.ride_date_and_time).toLocaleString()}</p>
-                            <p><strong>Vehicle:</strong> ${vehicleType}</p>
-                            <p><strong>Price:</strong> ₹${ride.total_price}</p>
-                            <button class="btn cancel-btn" onclick="cancelRide('${ride.ride_id}')">Cancel Ride</button>
-                            <button class="btn chat-btn" onclick="chatWithDriver('${ride.ride_id}')">Chat</button>
-                        `;
-                        myRidesContainer.appendChild(rideBox);
-                    });
-
-                    updatePagination(result.total_pages, page);
-                } else {
-                    myRidesContainer.innerHTML = `<p>Error loading rides: ${result.error}</p>`;
-                }
-            } catch (error) {
-                console.error("Error fetching rides:", error);
-                myRidesContainer.innerHTML = "<p>Failed to load rides.</p>";
-            }
-        }
-
-        function updatePagination(totalPages, currentPage) {
-            const paginationContainer = document.getElementById("pagination");
-            paginationContainer.innerHTML = "";
-
-            for (let i = 1; i <= totalPages; i++) {
-                let button = document.createElement("button");
-                button.textContent = i;
-                if (i === currentPage) {
-                    button.style.background = "#0056b3";
-                }
-                button.onclick = () => {
-                    currentPage = i;
-                    loadMyRides(i);
-                };
-                paginationContainer.appendChild(button);
-            }
-        }
-
-        function cancelRide(rideId) {
-            alert(`Cancel ride with ID: ${rideId}`);
-        }
-
-        function chatWithDriver(rideId) {
-            // Navigate to the chat page for the specific ride
-            window.location.href = `/chat/${rideId}`;
-        }
-
-        window.onload = () => loadMyRides(currentPage);
-
-        document.getElementById("go-back-button").addEventListener("click", function () {
-            window.location.href = "/index";
+      try {
+        const response = await fetch(`/get_my_rides?page=${page}`, {
+          credentials: 'include' // Include session cookie
         });
-    </script>
+        const result = await response.json();
+
+        if (response.ok) {
+          myRidesContainer.innerHTML = "";
+
+          if (!result.rides || result.rides.length === 0) {
+            myRidesContainer.innerHTML = "<p>No upcoming rides found!</p>";
+            return;
+          }
+
+          result.rides.forEach((ride) => {
+            const rideBox = document.createElement("div");
+            rideBox.classList.add("ride-box");
+            rideBox.innerHTML = `
+              <p><strong>From:</strong> ${ride.from_location}</p>
+              <p><strong>To:</strong> ${ride.to_location}</p>
+              <p><strong>Date:</strong> ${new Date(ride.ride_date_and_time).toLocaleString()}</p>
+              <p><strong>Vehicle:</strong> ${ride.vehicle_type || "Unknown"}</p>
+              <p><strong>Price:</strong> ₹${ride.total_price}</p>
+              <button class="btn cancel-btn" onclick="cancelRide('${ride.ride_id}')">Cancel Ride</button>
+              <button class="btn chat-btn" onclick="chatWithDriver('${ride.ride_id}')">Chat</button>
+            `;
+            myRidesContainer.appendChild(rideBox);
+          });
+
+          updatePagination(result.total_pages, page);
+        } else {
+          myRidesContainer.innerHTML = `<p>Error loading rides: ${result.error}</p>`;
+        }
+      } catch (error) {
+        console.error("Error fetching rides:", error);
+        myRidesContainer.innerHTML = "<p>Failed to load rides.</p>";
+      }
+    }
+
+    function updatePagination(totalPages, current) {
+      const paginationContainer = document.getElementById("pagination");
+      paginationContainer.innerHTML = "";
+
+      for (let i = 1; i <= totalPages; i++) {
+        let button = document.createElement("button");
+        button.textContent = i;
+        if (i === current) {
+          button.style.background = "#0056b3";
+        }
+        button.onclick = () => {
+          currentPage = i;
+          loadMyRides(i);
+        };
+        paginationContainer.appendChild(button);
+      }
+    }
+
+    async function cancelRide(rideId) {
+      if (!confirm("Are you sure you want to cancel this ride?")) return;
+
+      try {
+        const response = await fetch('/cancel_ride', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include', // <<=== THIS IS CRUCIAL
+          body: JSON.stringify({ ride_id: rideId })
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+          alert("You have been removed from the ride.");
+          loadMyRides(currentPage);
+        } else {
+          alert(result.error || "Failed to cancel ride.");
+        }
+      } catch (error) {
+        console.error("Error cancelling ride:", error);
+        alert("An error occurred while cancelling the ride.");
+      }
+    }
+
+    function chatWithDriver(rideId) {
+      window.location.href = `/chat/${rideId}`;
+    }
+
+    window.onload = () => loadMyRides(currentPage);
+
+    document.getElementById("go-back-button").addEventListener("click", function () {
+      window.location.href = "/index";
+    });
+  </script>
 </body>
 </html>

@@ -84,6 +84,8 @@ def index():
     except Exception as e:
         print("Error:", str(e))
         return "Failed to fetch rides", 500"""
+
+'''working index
 @app.route('/index')
 def index():
     try:
@@ -111,7 +113,40 @@ def index():
 
     except Exception as e:
         print("Error:", str(e))
+        return "Failed to fetch rides", 500'''
+
+@app.route('/index')
+def index():
+    try:
+        current_time = datetime.datetime.now(datetime.timezone.utc)
+
+        rides_ref = db.collection('rides')
+        rides = []
+
+        for ride in rides_ref.stream():
+            ride_data = ride.to_dict()
+            ride_datetime = ride_data.get('ride_date_and_time')
+
+            # Ensure the date is a datetime object
+            if isinstance(ride_datetime, datetime.datetime):
+                if ride_datetime.tzinfo is None:
+                    ride_datetime = ride_datetime.replace(tzinfo=datetime.timezone.utc)
+            else:
+                ride_datetime = ride_datetime.to_datetime()
+
+            if ride_datetime > current_time:
+                ride_data['ride_date_and_time'] = ride_datetime
+                rides.append(ride_data)
+
+        # ✅ Add the ad image path from the static folder
+        ad_url = url_for('static', filename='ads/vit.png')
+
+        return render_template('index.html', rides=rides, ad_url=ad_url)
+
+    except Exception as e:
+        print("Error:", str(e))
         return "Failed to fetch rides", 500
+
 
 
 

@@ -87,12 +87,35 @@
         .ride-box .select-btn:hover {
             background: #218838;
         }
+
+        /* ✅ Advertisement styles */
+        .ad-box {
+            background: #fff;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border: 1px solid #ccc;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .ad-box img.ad-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>Welcome to ShareNGo</h2>
         <p>Book a ride or create a new one with ease.</p>
+
+        <!-- ✅ Ad Section -->
+        <div class="ad-box">
+            <h3>Sponsored</h3>
+            <img src="{{ ad_url }}" alt="Advertisement" class="ad-image">
+        </div>
 
         <!-- Navigation Buttons -->
         <div>

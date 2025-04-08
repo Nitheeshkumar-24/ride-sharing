@@ -13,7 +13,7 @@ app = Flask(__name__)
 app.secret_key = provide_secret_key()
 
 # Initialize Firebase
-cred = credentials.Certificate(r"e:\git files\ride-sharing-b7053-firebase-adminsdk-fbsvc-45494f1901.json")
+cred = credentials.Certificate(r"C:\git files\ride-sharing-b7053-firebase-adminsdk-fbsvc-45494f1901.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
@@ -540,6 +540,87 @@ def chat_page(ride_id):
     if 'user_email' not in session:
         return redirect('/login')
     return render_template('chat.html', ride_id=ride_id)
+
+
+#*********************************************************************************************************
+def is_user_in_ride(ride_id, user_email):
+    ride_doc = db.collection('rides').document(str(ride_id)).get()
+    if not ride_doc.exists:
+        return False
+    ride_data = ride_doc.to_dict()
+    return user_email in ride_data.get('passengers', []) or user_email == ride_data.get('owner')
+
+@app.route('/send_chat/<ride_id>', methods=['POST'])
+def send_chat(ride_id):
+    try:
+        if 'user_email' not in session:
+            return jsonify({'error': 'Unauthorized'}), 401
+        
+        data = request.get_json()
+        message = data.get('message', '').strip()
+
+        if not message:
+            return jsonify({'error': 'Empty message'}), 400
+        
+        if not is_user_in_ride(ride_id, session['user_email']):
+            return jsonify({'error': 'Access denied'}), 403
+
+        chat_ref = db.collection('chats').document(ride_id).collection('messages')
+
+        chat_ref.add({
+            'sender': session['user_email'],
+            'message': message,
+            'timestamp': datetime.datetime.now(datetime.timezone.utc)
+        })
+
+        return jsonify({'message': 'Message sent'}), 200
+
+    except Exception as e:
+        print("Error in send_chat:", str(e))
+        return jsonify({'error': 'Failed to send message'}), 500
+    
+
+@app.route('/get_chat/<ride_id>', methods=['GET'])
+def get_chat(ride_id):
+    try:
+        if 'user_email' not in session:
+            return jsonify({'error': 'Unauthorized'}), 401
+        
+        if not is_user_in_ride(ride_id, session['user_email']):
+            return jsonify({'error': 'Access denied'}), 403
+        
+        chat_ref = db.collection('chats').document(ride_id).collection('messages').order_by('timestamp')
+        chat_docs = chat_ref.stream()
+
+        messages = []
+        for doc in chat_docs:
+            msg_data = doc.to_dict()
+            messages.append({
+                'sender': msg_data.get('sender'),
+                'message': msg_data.get('message'),
+                'timestamp': msg_data.get('timestamp').isoformat()
+            })
+
+        return jsonify({'messages': messages}), 200
+
+    except Exception as e:
+        print("Error in get_chat:", str(e))
+        return jsonify({'error': 'Failed to fetch chat'}), 500
+    
+@app.route('/chat')
+def chat_view():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+    
+    ride_id = request.args.get('ride_id')
+    if not ride_id:
+        return "Ride ID not provided", 400
+    
+    return render_template('chat.html', ride_id=ride_id, session=session, user_email=session['user']['email'])
+#*********************************************************************************************************
+
+
+
 
 
 if __name__ == '__main__':

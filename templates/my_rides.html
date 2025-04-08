@@ -112,9 +112,7 @@
                     }
 
                     result.rides.forEach((ride) => {
-                        console.log("Ride Data:", ride);  // Debugging log
-
-                        const vehicleType = ride.vehicle_type || "Unknown"; // Fallback if missing
+                        const vehicleType = ride.vehicle_type || "Unknown";
 
                         const rideBox = document.createElement("div");
                         rideBox.classList.add("ride-box");
@@ -130,7 +128,6 @@
                         myRidesContainer.appendChild(rideBox);
                     });
 
-                    // Update pagination
                     updatePagination(result.total_pages, page);
                 } else {
                     myRidesContainer.innerHTML = `<p>Error loading rides: ${result.error}</p>`;
@@ -164,11 +161,8 @@
         }
 
         function chatWithDriver(rideId) {
-            alert(`Chat with driver for ride ID: ${rideId}`);
-        }
-
-        function goBack() {
-            window.location.href = "index.html";
+            // Navigate to the chat page for the specific ride
+            window.location.href = `/chat/${rideId}`;
         }
 
         window.onload = () => loadMyRides(currentPage);

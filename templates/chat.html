@@ -109,36 +109,35 @@
     </div>
 
     <script>
-        const rideId = "{{ ride_id }}";  // Flask passes ride ID
-        const userEmail = "{{ session['user_email'] }}";  // Logged-in user from Flask
+        const rideId = "{{ ride_id }}";
+        const userEmail = "{{ user_email }}";
 
         function sendMessage() {
             const input = document.getElementById("messageInput");
             const message = input.value.trim();
             if (message === "") return;
 
-            fetch("/send_message", {
+            fetch(`/send_chat/${rideId}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    ride_id: rideId,
-                    sender: userEmail,
-                    message: message
-                })
-            }).then(() => {
+                body: JSON.stringify({ message: message })
+            }).then(res => {
+                if (!res.ok) {
+                    alert("Failed to send message.");
+                }
                 input.value = "";
                 loadChatHistory();
             });
         }
 
         function loadChatHistory() {
-            fetch(`/get_messages?ride_id=${rideId}`)
+            fetch(`/get_chat/${rideId}`)
                 .then(response => response.json())
-                .then(messages => {
+                .then(data => {
                     const chatBox = document.getElementById("chatBox");
                     chatBox.innerHTML = "";
 
-                    messages.forEach(chat => {
+                    data.messages.forEach(chat => {
                         const messageDiv = document.createElement("div");
                         messageDiv.classList.add("message");
 
@@ -158,7 +157,7 @@
         }
 
         function goBack() {
-            window.location.href = "/my_rides";  // Adjust to your actual route
+            window.location.href = "/my_rides";
         }
 
         window.onload = () => {

@@ -154,8 +154,7 @@
             <p><strong>Date:</strong> {{ ride.ride_date_and_time.strftime('%Y-%m-%d %H:%M:%S') }}</p>
             <p><strong>From:</strong> {{ ride.from_location }}</p>
             <p><strong>To:</strong> {{ ride.to_location }}</p>
-            <p><strong>Vehicle:</strong> {{ ride.vehicle_type }}</p>
-            <p><strong>Seats Available:</strong> {{ ride.available_seats }}</p>
+            <p><strong>Vehicle:</strong> {{ ride.vehicle_id }}</p>            <p><strong>Seats Available:</strong> {{ ride.available_seats }}</p>
             <p><strong>Total Passengers:</strong> {{ ride.current_member_count }}</p>
             <p><strong>Price (per person):</strong> ₹{{ ride.per_person_cost }}</p>
             <button class="select-btn" onclick="joinRide('{{ ride.ride_id }}')">Select Ride</button>

@@ -100,7 +100,7 @@
 
       try {
         const response = await fetch(`/get_my_rides?page=${page}`, {
-          credentials: 'include' // Include session cookie
+          credentials: 'include'
         });
         const result = await response.json();
 
@@ -121,6 +121,7 @@
               <p><strong>Date:</strong> ${new Date(ride.ride_date_and_time).toLocaleString()}</p>
               <p><strong>Vehicle:</strong> ${ride.vehicle_type || "Unknown"}</p>
               <p><strong>Price:</strong> ₹${ride.total_price}</p>
+              <p><strong>Per Person Cost:</strong> ₹${ride.per_person_cost}</p>
               <button class="btn cancel-btn" onclick="cancelRide('${ride.ride_id}')">Cancel Ride</button>
               <button class="btn chat-btn" onclick="chatWithDriver('${ride.ride_id}')">Chat</button>
             `;
@@ -164,7 +165,7 @@
           headers: {
             'Content-Type': 'application/json'
           },
-          credentials: 'include', // <<=== THIS IS CRUCIAL
+          credentials: 'include',
           body: JSON.stringify({ ride_id: rideId })
         });
 

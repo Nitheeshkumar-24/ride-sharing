@@ -14,7 +14,7 @@ app = Flask(__name__)
 app.secret_key = provide_secret_key()
 
 # Initialize Firebase
-cred = credentials.Certificate(r"e:\git files\ride-sharing-b7053-firebase-adminsdk-fbsvc-45494f1901.json")
+cred = credentials.Certificate(r"C:\git files\ride-sharing-b7053-firebase-adminsdk-fbsvc-45494f1901.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
@@ -267,48 +267,46 @@ def create_ride():
         print('Error:', str(e))
         return jsonify({'error': f'Failed to create ride: {str(e)}'}), 500
 
+
 @app.route('/select_ride', methods=['POST'])
 def select_ride():
-    try:
-        data = request.get_json()
-        ride_id = str(data.get('ride_id'))
-        user_email = session['user_email']
+    data = request.get_json()
+    ride_id = str(data.get('ride_id'))
+    user_email = session.get('user_email')  # ✅ Fixed here
 
-        # Get ride document
-        ride_ref = db.collection('rides').document(ride_id)
-        ride_doc = ride_ref.get()
+    if not user_email:
+        return jsonify({"error": "User not logged in"}), 401
 
-        if not ride_doc.exists:
-            return jsonify({'error': 'Ride not found'}), 404
+    ride_ref = db.collection('rides').document(ride_id)
+    ride_doc = ride_ref.get()
 
-        ride_data = ride_doc.to_dict()
-        passengers = ride_data.get('passengers', [])
+    if not ride_doc.exists:
+        return jsonify({"error": "Ride not found"}), 404
 
-        # Prevent duplicate booking
-        if user_email in passengers:
-            return jsonify({'message': 'You have already joined this ride.'}), 200
+    ride_data = ride_doc.to_dict()
 
-        # Check seat availability
-        available_seats = ride_data.get('available_seats', 0)
-        if available_seats <= 0:
-            return jsonify({'error': 'No available seats'}), 400
+    if ride_data['available_seats'] <= 0:
+        return jsonify({"error": "No seats available"}), 400
 
-        # Update passengers list and counters
-        passengers.append(user_email)
-        current_member_count = ride_data.get('current_member_count', 1) + 1
-        available_seats -= 1
+    passenger_emails = ride_data.get('passenger_emails', [])
 
-        ride_ref.update({
-            'passengers': passengers,
-            'current_member_count': current_member_count,
-            'available_seats': available_seats
-        })
+    if user_email in passenger_emails:
+        return jsonify({"error": "You have already joined this ride."}), 400
 
-        return jsonify({'message': 'Ride selected successfully'}), 200
+    passenger_emails.append(user_email)
+    current_member_count = ride_data.get('current_member_count', 1) + 1
+    available_seats = ride_data.get('available_seats', 0) - 1
+    total_price = ride_data.get('total_price', 0)
+    per_person_cost = total_price / current_member_count
 
-    except Exception as e:
-        print("Error selecting ride:", str(e))
-        return jsonify({'error': f'Failed to select ride: {str(e)}'}), 500
+    ride_ref.update({
+        'passenger_emails': passenger_emails,
+        'current_member_count': current_member_count,
+        'available_seats': available_seats,
+        'per_person_cost': per_person_cost
+    })
+
+    return jsonify({"message": "Successfully joined the ride!"})
 
 
 
@@ -370,7 +368,6 @@ def get_my_rides():
         return jsonify({'error': f'Failed to fetch rides: {str(e)}'}), 500"""
 
 
-
 @app.route('/get_my_rides', methods=['GET'])
 def get_my_rides():
     try:
@@ -400,13 +397,17 @@ def get_my_rides():
             if isinstance(ride_datetime, datetime.datetime):
                 if ride_datetime.tzinfo is None:
                     ride_datetime = ride_datetime.replace(tzinfo=datetime.timezone.utc)
-            else:
+            elif hasattr(ride_datetime, 'to_datetime'):
                 ride_datetime = ride_datetime.to_datetime()
+            else:
+                continue  # Skip invalid datetime
 
             if ride_datetime > current_time:
                 ride_data['ride_date_and_time'] = ride_datetime
                 ride_data['vehicle_type'] = ride_data.get('vehicle_id', 'Unknown')
                 ride_data['joined_as'] = 'owner'
+                ride_data['ride_id'] = ride.id
+                ride_data['per_person_cost'] = ride_data.get('per_person_cost', 0)
                 all_rides.append(ride_data)
 
         # Add rides where user is a passenger (but not owner)
@@ -416,20 +417,24 @@ def get_my_rides():
             if ride_data.get('owner') == user_email:
                 continue  # Already included
 
-            passengers = ride_data.get('passengers', [])
-            if user_email in passengers:
+            passenger_emails = ride_data.get('passenger_emails', [])
+            if user_email in passenger_emails:
                 ride_datetime = ride_data.get('ride_date_and_time')
 
                 if isinstance(ride_datetime, datetime.datetime):
                     if ride_datetime.tzinfo is None:
                         ride_datetime = ride_datetime.replace(tzinfo=datetime.timezone.utc)
-                else:
+                elif hasattr(ride_datetime, 'to_datetime'):
                     ride_datetime = ride_datetime.to_datetime()
+                else:
+                    continue  # Skip invalid datetime
 
                 if ride_datetime > current_time:
                     ride_data['ride_date_and_time'] = ride_datetime
                     ride_data['vehicle_type'] = ride_data.get('vehicle_id', 'Unknown')
                     ride_data['joined_as'] = 'passenger'
+                    ride_data['ride_id'] = ride.id
+                    ride_data['per_person_cost'] = ride_data.get('per_person_cost', 0)
                     all_rides.append(ride_data)
 
         # Sort rides by date

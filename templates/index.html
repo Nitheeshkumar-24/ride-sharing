@@ -24,6 +24,24 @@
             width: 100%;
             max-width: 600px;
             text-align: center;
+            position: relative;
+        }
+
+        .logout-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .logout-btn:hover {
+            background-color: #c82333;
         }
 
         h2 {
@@ -88,7 +106,6 @@
             background: #218838;
         }
 
-        /* ✅ Advertisement styles */
         .ad-box {
             background: #fff;
             padding: 1rem;
@@ -107,82 +124,96 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Welcome to ShareNGo</h2>
-        <p>Book a ride or create a new one with ease.</p>
+<div class="container">
+    <!-- 🔒 Logout Button -->
+    <button class="logout-btn" onclick="logout()">Logout</button>
 
-        <!-- ✅ Ad Section -->
-        <div class="ad-box">
-            <h3>Sponsored</h3>
-            <img src="{{ ad_url }}" alt="Advertisement" class="ad-image">
-        </div>
+    <h2>Welcome to ShareNGo</h2>
+    <p>Book a ride or create a new one with ease.</p>
 
-        <!-- Navigation Buttons -->
-        <div>
-            <a class="btn" id="ride-creation">Create a Ride</a>
-            <a class="btn" id="filter">Filter</a>
-            <a class="btn" id="ride-history">Ride History</a>
-            <a class="btn" id="my-rides">My Rides</a>
-        </div>
-
-        <!-- Available Rides Section -->
-        <div class="available-rides">
-            <h3>Available Rides</h3>
-
-            {% for ride in rides %}
-            <div class="ride-box">
-                <p><strong>Date:</strong> {{ ride.ride_date_and_time.strftime('%Y-%m-%d %H:%M:%S') }}</p>
-                <p><strong>From:</strong> {{ ride.from_location }}</p>
-                <p><strong>To:</strong> {{ ride.to_location }}</p>
-                <p><strong>Vehicle:</strong> {{ ride.vehicle_id }}</p>
-                <p><strong>Seats Available:</strong> {{ ride.available_seats }}</p>
-                <p><strong>Total Passengers:</strong> {{ ride.current_member_count }}</p>
-                <p><strong>Price:</strong> ₹{{ ride.total_price }}</p>
-                <button class="select-btn" onclick="joinRide('{{ ride.ride_id }}')">Select Ride</button>
-            </div>
-            {% else %}
-            <p>No rides available.</p>
-            {% endfor %}
-        </div>
+    <!-- ✅ Ad Section -->
+    <div class="ad-box">
+        <h3>Sponsored</h3>
+        <img src="{{ ad_url }}" alt="Advertisement" class="ad-image">
     </div>
 
-    <script>
-        function joinRide(rideId) {
-            fetch('/select_ride', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ ride_id: rideId })
-            })
-            .then(response => response.json())
-            .then(data => {
-                alert(data.message || data.error);
-                if (data.message) {
-                    location.reload(); // Refresh to update seat/passenger count
-                }
-            })
-            .catch(err => {
-                console.error('Error:', err);
-                alert("Something went wrong!");
-            });
-        }
+    <!-- Navigation Buttons -->
+    <div>
+        <a class="btn" id="ride-creation">Create a Ride</a>
+        <a class="btn" id="filter">Filter</a>
+        <a class="btn" id="ride-history">Ride History</a>
+        <a class="btn" id="my-rides">My Rides</a>
+    </div>
 
-        document.getElementById("ride-creation").addEventListener("click", function () {
-            window.location.href = "/ride_creation_page";
-        });
+    <!-- Available Rides Section -->
+    <div class="available-rides">
+        <h3>Available Rides</h3>
 
-        document.getElementById("filter").addEventListener("click", function () {
-            window.location.href = "/filter_page";
-        });
+        {% for ride in rides %}
+        <div class="ride-box">
+            <p><strong>Date:</strong> {{ ride.ride_date_and_time.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+            <p><strong>From:</strong> {{ ride.from_location }}</p>
+            <p><strong>To:</strong> {{ ride.to_location }}</p>
+            <p><strong>Vehicle:</strong> {{ ride.vehicle_type }}</p>
+            <p><strong>Seats Available:</strong> {{ ride.available_seats }}</p>
+            <p><strong>Total Passengers:</strong> {{ ride.current_member_count }}</p>
+            <p><strong>Price (per person):</strong> ₹{{ ride.per_person_cost }}</p>
+            <button class="select-btn" onclick="joinRide('{{ ride.ride_id }}')">Select Ride</button>
+        </div>
+        {% else %}
+        <p>No rides available.</p>
+        {% endfor %}
+    </div>
+</div>
 
-        document.getElementById("ride-history").addEventListener("click", function () {
-            window.location.href = "/ride_history_page";
+<script>
+    function joinRide(rideId) {
+        fetch('/select_ride', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ ride_id: rideId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message || data.error);
+            if (data.message) {
+                location.reload();
+            }
+        })
+        .catch(err => {
+            console.error('Error:', err);
+            alert("Something went wrong!");
         });
+    }
 
-        document.getElementById("my-rides").addEventListener("click", function () {
-            window.location.href = "/my_rides_page";
+    document.getElementById("ride-creation").addEventListener("click", function () {
+        window.location.href = "/ride_creation_page";
+    });
+
+    document.getElementById("filter").addEventListener("click", function () {
+        window.location.href = "/filter_page";
+    });
+
+    document.getElementById("ride-history").addEventListener("click", function () {
+        window.location.href = "/ride_history_page";
+    });
+
+    document.getElementById("my-rides").addEventListener("click", function () {
+        window.location.href = "/my_rides_page";
+    });
+
+    function logout() {
+        fetch('/logout', {
+            method: 'POST'
+        }).then(() => {
+            window.location.href = '/';
+        }).catch(err => {
+            alert('Failed to logout.');
+            console.error(err);
         });
-    </script>
+    }
+</script>
 </body>
 </html>

@@ -220,7 +220,7 @@ def signin():
     except Exception as e:
         print("Error:", str(e))
         return jsonify({'error': 'Something went wrong!'}), 500
-    
+"""  
 @app.route('/create_ride', methods=['POST'])
 def create_ride():
     try:
@@ -265,7 +265,61 @@ def create_ride():
 
     except Exception as e:
         print('Error:', str(e))
+        return jsonify({'error': f'Failed to create ride: {str(e)}'}), 500"""  
+
+
+
+@app.route('/create_ride', methods=['POST'])
+def create_ride():
+    try:
+        user_email = session.get('user_email')
+        if not user_email:
+            return jsonify({'error': 'User not logged in'}), 401
+        
+        data = request.get_json()
+        ride_id = get_next_ride_id()
+        
+        from_location = data.get('from')
+        to_location = data.get('to')
+        ride_date = data.get('date')
+        ride_time = data.get('time')
+        vehicle_id = data.get('vehicle')
+        total_seats = int(data.get('passengers'))
+        total_price = float(data.get('price'))
+        current_member_count = 1
+        per_person_cost = total_price / current_member_count
+
+        # Parse datetime and localize to IST
+        naive_datetime = datetime.datetime.strptime(f"{ride_date} {ride_time}", "%Y-%m-%d %H:%M")
+        ist = pytz.timezone("Asia/Kolkata")
+        localized_datetime = ist.localize(naive_datetime)
+
+        # Optional: Convert to UTC explicitly (Firestore uses UTC by default)
+        ride_date_and_time = localized_datetime.astimezone(pytz.utc)
+
+        ride_data = {
+            'ride_id': ride_id,
+            'current_member_count': current_member_count,
+            'from_location': from_location,
+            'to_location': to_location,
+            'ride_date_and_time': ride_date_and_time,
+            'total_seats': total_seats,
+            'available_seats': total_seats - 1,
+            'total_price': total_price,
+            'per_person_cost': per_person_cost,
+            'vehicle_id': vehicle_id,
+            'owner': user_email,
+            'passengers': [user_email]
+        }
+
+        db.collection('rides').document(str(ride_id)).set(ride_data)
+
+        return jsonify({'message': 'Ride created successfully!'}), 200
+
+    except Exception as e:
+        print('Error:', str(e))
         return jsonify({'error': f'Failed to create ride: {str(e)}'}), 500
+
 
 
 @app.route('/select_ride', methods=['POST'])

@@ -288,19 +288,19 @@ def select_ride():
     if ride_data['available_seats'] <= 0:
         return jsonify({"error": "No seats available"}), 400
 
-    passenger_emails = ride_data.get('passenger_emails', [])
+    passengers = ride_data.get('passengers', [])
 
-    if user_email in passenger_emails:
+    if user_email in passengers:
         return jsonify({"error": "You have already joined this ride."}), 400
 
-    passenger_emails.append(user_email)
+    passengers.append(user_email)
     current_member_count = ride_data.get('current_member_count', 1) + 1
     available_seats = ride_data.get('available_seats', 0) - 1
     total_price = ride_data.get('total_price', 0)
     per_person_cost = total_price / current_member_count
 
     ride_ref.update({
-        'passenger_emails': passenger_emails,
+        'passengers': passengers,
         'current_member_count': current_member_count,
         'available_seats': available_seats,
         'per_person_cost': per_person_cost
@@ -417,8 +417,8 @@ def get_my_rides():
             if ride_data.get('owner') == user_email:
                 continue  # Already included
 
-            passenger_emails = ride_data.get('passenger_emails', [])
-            if user_email in passenger_emails:
+            passengers = ride_data.get('passengers', [])
+            if user_email in passengers:
                 ride_datetime = ride_data.get('ride_date_and_time')
 
                 if isinstance(ride_datetime, datetime.datetime):

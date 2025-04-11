@@ -564,6 +564,8 @@ def filter_rides():
         matched_rides.append(ride_data)
 
     return jsonify({'rides': matched_rides})
+    #return render_template('my_rides.html', rides=rides)
+
 
 
 
@@ -714,6 +716,7 @@ def chat_view():
     return render_template('chat.html', ride_id=ride_id, session=session, user_email=session['user']['email'])
 #*********************************************************************************************************
 #cancelling the ride
+'''
 @app.route('/cancel_ride', methods=['POST'])
 def cancel_ride():
     if 'email' not in session:
@@ -743,8 +746,70 @@ def cancel_ride():
     updated_passengers = [email for email in passengers if email != user_email]
     ride_ref.update({"passengers": updated_passengers})
 
-    return jsonify({"success": True})
+    return jsonify({"success": True})'''
+'''
+@app.route('/cancel_ride', methods=['POST'])
+def cancel_ride():
+    if 'user_email' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
 
+    user_email = session['user_email']
+    data = request.json
+    ride_id = data.get('ride_id')
+
+    if not ride_id:
+        return jsonify({"error": "Missing ride ID"}), 400
+
+    db = firestore.client()
+    ride_ref = db.collection('rides').document(ride_id)
+    ride_doc = ride_ref.get()
+
+    if not ride_doc.exists:
+        return jsonify({"error": "Ride not found"}), 404
+
+    ride_data = ride_doc.to_dict()
+    passengers = ride_data.get('passengers', [])
+
+    if user_email not in passengers:
+        return jsonify({"error": "User not part of the ride"}), 400
+
+    # Remove user from passengers list
+    updated_passengers = [email for email in passengers if email != user_email]
+    ride_ref.update({"passengers": updated_passengers})
+
+    return jsonify({"message": "Successfully left the ride"}), 200'''
+
+@app.route('/cancel_ride', methods=['POST'])
+def cancel_ride():
+    if 'user_email' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    user_email = session['user_email']
+    data = request.json
+    ride_id = data.get('ride_id')
+
+    if not ride_id:
+        return jsonify({"error": "Missing ride ID"}), 400
+
+    db = firestore.client()
+    ride_ref = db.collection('rides').document(ride_id)
+    ride_doc = ride_ref.get()
+
+    if not ride_doc.exists:
+        return jsonify({"error": "Ride not found"}), 404
+
+    ride_data = ride_doc.to_dict()
+    passengers = ride_data.get('passengers', [])
+
+    if user_email not in passengers:
+        return jsonify({"error": "User not part of the ride"}), 400
+
+    # Remove user from passengers list
+    updated_passengers = [email for email in passengers if email != user_email]
+    ride_ref.update({"passengers": updated_passengers})
+
+    # ✅ Fix: Return a success response
+    return jsonify({"message": "Successfully left the ride"}), 200
 
 
 
